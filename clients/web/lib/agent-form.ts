@@ -79,6 +79,10 @@ export const defaultAgentForm: AgentFormState = {
 /** Canonicalize form state into the POST /api/agents body. */
 export function toCreatePayload(f: AgentFormState) {
   const toNum = (s: string) => (s.trim() === "" ? null : Number(s))
+  const toFrac = (s: string) => {
+    const n = toNum(s)
+    return n == null ? null : n / 100
+  }
   return {
     name: f.name.trim() || "Unnamed Agent",
     symbol: `${f.symbol}USDT`,
@@ -87,8 +91,8 @@ export function toCreatePayload(f: AgentFormState) {
     risk_profile: f.risk_profile,
     primary_timeframe: f.primary_timeframe,
     poll_seconds: f.poll_seconds,
-    tp_pct: toNum(f.tp_pct),
-    sl_pct: toNum(f.sl_pct),
+    tp_pct: toFrac(f.tp_pct),
+    sl_pct: toFrac(f.sl_pct),
     tp_sl_mode: f.tp_sl_mode,
     supervisor_interval: f.supervisor_interval,
     live_mode: f.live_mode,

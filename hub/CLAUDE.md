@@ -1,6 +1,6 @@
 # Hub Module — Artic
 
-Central FastAPI orchestrator. Owns user auth, VM lifecycle (Morph), secrets management,
+Central FastAPI orchestrator. Owns user auth, VM lifecycle, secrets management,
 market cache, and the client-facing REST/WebSocket API. Proxies all user-server calls
 via wake-proxy middleware (`/api/v1/u/*`).
 
@@ -10,16 +10,15 @@ via wake-proxy middleware (`/api/v1/u/*`).
 hub/
 ├── server.py              # FastAPI entry, route registration, lifespan
 ├── config.py              # Settings (env-based)
-├── auth/                  # Wallet-connect authentication (Initia/Cosmos ADR-36)
+├── auth/                  # Wallet-connect authentication (EVM SIWE on 0G)
 │   ├── router.py          # /auth/nonce, /auth/verify, /auth/refresh, /auth/me, /auth/session
 │   ├── service.py         # JWT, nonce, sign-in message
 │   ├── session.py         # session-key issue/verify/revoke + monotonic-nonce guard
-│   ├── initia_names.py    # .init username reverse lookup + 24h cache
-│   ├── verifiers/         # Chain-pluggable sig verifiers (cosmos_adr36.py)
+│   ├── verifiers/         # EVM SIWE sig verifier (evm_siwe.py)
 │   └── deps.py            # get_current_user + require_session_key
-├── vm/                    # Morph VM lifecycle
+├── vm/                    # VM lifecycle
 │   ├── service.py         # provision, wake, drain, stop, touch
-│   ├── provider.py        # Morph API client (start/stop/snapshot)
+│   ├── provider.py        # VM provider API client (start/stop/snapshot)
 │   ├── morph_provider.py  # Morph-specific impl
 │   └── registry.py        # In-memory VM state cache
 ├── proxy/                 # Wake-proxy middleware + WS stub
@@ -46,7 +45,7 @@ hub/
 ## Exposes To Clients
 
 - `/api/v1/u/*` — proxied to user-server (wake-proxy, JWT auth)
-- `/auth/*` — Initia wallet auth (ADR-36 sig → JWT + session key)
+- `/auth/*` — EVM SIWE wallet auth on 0G (sig → JWT + session key)
 - `/api/market/candles` — cached candle data
 - `/ws/u/agents/*/logs` — WebSocket log streaming (stub, pending impl)
 

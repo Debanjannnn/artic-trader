@@ -8,13 +8,12 @@ from __future__ import annotations
 
 from typing import Callable
 
-from .cosmos_adr36 import verify_cosmos_adr36
+from .evm_siwe import verify_evm_siwe
 
 Verifier = Callable[[str, str, str, str], bool]
 
 VERIFIERS: dict[str, Verifier] = {
-    "initia-testnet": verify_cosmos_adr36,
-    "initia-mainnet": verify_cosmos_adr36,
+    "0g-mainnet": verify_evm_siwe,
 }
 
 

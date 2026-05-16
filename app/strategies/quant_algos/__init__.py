@@ -45,6 +45,8 @@ from .time_filters import (
     session_filter,
     day_of_week_filter,
 )
+from .smart_money import smart_money
+from .meth_rwa import meth_rwa
 
 __all__ = [
     "simple_momentum",
@@ -74,4 +76,6 @@ __all__ = [
     "vol_scaling_mult",
     "session_filter",
     "day_of_week_filter",
+    "smart_money",
+    "meth_rwa",
 ]

@@ -9,6 +9,7 @@ import { CreditsWidget } from "@/components/dashboard/credits-widget"
 import { WarningsToggle } from "@/components/dashboard/warnings-toggle"
 
 const NAV = [
+  { href: "/app/overview", label: "Overview" },
   { href: "/app/agents", label: "Agents" },
   { href: "/app/strategies", label: "Strategies" },
   { href: "/app/marketplace", label: "Marketplace" },

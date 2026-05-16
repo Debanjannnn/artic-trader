@@ -1,0 +1,247 @@
+
+<style>
+  .bento-wrap { padding: 1.5rem 0; }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 200px 200px;
+    gap: 10px;
+    transition:
+      grid-template-columns 0.55s cubic-bezier(0.4,0,0.2,1),
+      grid-template-rows    0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .bento-cell {
+    border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    position: relative;
+  }
+
+  .cell-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    transition: opacity 0.4s ease;
+  }
+
+  .cell-inner {
+    position: relative;
+    z-index: 1;
+    padding: 1.1rem 1.25rem;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cell-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+    transition: font-size 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .cell-tag {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 8px;
+    width: fit-content;
+  }
+
+  .cell-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin: 0 0 4px;
+    line-height: 1.3;
+    transition: font-size 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .cell-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition:
+      opacity   0.35s ease 0.15s,
+      max-height 0.5s cubic-bezier(0.4,0,0.2,1) 0.05s;
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 8px;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition:
+      opacity   0.3s ease 0.2s,
+      max-height 0.5s cubic-bezier(0.4,0,0.2,1) 0.05s;
+  }
+
+  .pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 0.5px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Active state ── */
+  .bento-cell.active .cell-bg    { opacity: 0.16; }
+  .bento-cell.active .cell-icon  { font-size: 30px; }
+  .bento-cell.active .cell-title { font-size: 19px; }
+  .bento-cell.active .cell-desc  { opacity: 1; max-height: 160px; }
+  .bento-cell.active .pill-row   { opacity: 1; max-height: 60px; }
+  .bento-cell.active              { border-color: var(--color-border-primary); }
+
+  /* ── Color themes ── */
+  .c1 .cell-bg  { background: #7F77DD; }
+  .c1 .cell-tag { background: #EEEDFE; color: #3C3489; }
+  .c2 .cell-bg  { background: #1D9E75; }
+  .c2 .cell-tag { background: #E1F5EE; color: #085041; }
+  .c3 .cell-bg  { background: #D85A30; }
+  .c3 .cell-tag { background: #FAECE7; color: #4A1B0C; }
+  .c4 .cell-bg  { background: #378ADD; }
+  .c4 .cell-tag { background: #E6F1FB; color: #0C447C; }
+  .c5 .cell-bg  { background: #D4537E; }
+  .c5 .cell-tag { background: #FBEAF0; color: #4B1528; }
+  .c6 .cell-bg  { background: #BA7517; }
+  .c6 .cell-tag { background: #FAEEDA; color: #412402; }
+</style>
+
+<div class="bento-wrap">
+  <h2 class="sr-only">Bento feature grid — hover any tile to expand it in place</h2>
+
+  <div class="bento-grid" id="grid">
+
+    <div class="bento-cell c1" data-col="0" data-row="0">
+      <div class="cell-bg"></div>
+      <div class="cell-inner">
+        <i class="cell-icon ti ti-bolt" aria-hidden="true"></i>
+        <span class="cell-tag">Performance</span>
+        <p class="cell-title">Lightning fast engine</p>
+        <p class="cell-desc">Built on a zero-overhead runtime delivering sub-millisecond response times. Scales horizontally to handle any workload.</p>
+        <div class="pill-row"><span class="pill">Edge compute</span><span class="pill">99.99% uptime</span><span class="pill">Auto-scaling</span></div>
+      </div>
+    </div>
+
+    <div class="bento-cell c2" data-col="1" data-row="0">
+      <div class="cell-bg"></div>
+      <div class="cell-inner">
+        <i class="cell-icon ti ti-shield-lock" aria-hidden="true"></i>
+        <span class="cell-tag">Security</span>
+        <p class="cell-title">End-to-end encryption</p>
+        <p class="cell-desc">AES-256 encryption in transit and at rest. Zero-knowledge architecture — even we can't see your data. SOC 2 Type II.</p>
+        <div class="pill-row"><span class="pill">AES-256</span><span class="pill">SOC 2</span><span class="pill">Zero-knowledge</span></div>
+      </div>
+    </div>
+
+    <div class="bento-cell c3" data-col="2" data-row="0">
+      <div class="cell-bg"></div>
+      <div class="cell-inner">
+        <i class="cell-icon ti ti-plug-connected" aria-hidden="true"></i>
+        <span class="cell-tag">Integrations</span>
+        <p class="cell-title">Connect everything</p>
+        <p class="cell-desc">One-click integrations with 200+ tools. A powerful REST API and webhooks let you build custom workflows that fit how you work.</p>
+        <div class="pill-row"><span class="pill">REST API</span><span class="pill">Webhooks</span><span class="pill">200+ apps</span></div>
+      </div>
+    </div>
+
+    <div class="bento-cell c4" data-col="0" data-row="1">
+      <div class="cell-bg"></div>
+      <div class="cell-inner">
+        <i class="cell-icon ti ti-chart-dots" aria-hidden="true"></i>
+        <span class="cell-tag">Analytics</span>
+        <p class="cell-title">Real-time insights</p>
+        <p class="cell-desc">Live dashboards surface metrics that matter. Set anomaly alerts, drill into cohorts, and export to any BI tool instantly.</p>
+        <div class="pill-row"><span class="pill">Live dashboards</span><span class="pill">Alerts</span><span class="pill">BI export</span></div>
+      </div>
+    </div>
+
+    <div class="bento-cell c5" data-col="1" data-row="1">
+      <div class="cell-bg"></div>
+      <div class="cell-inner">
+        <i class="cell-icon ti ti-users-group" aria-hidden="true"></i>
+        <span class="cell-tag">Collaboration</span>
+        <p class="cell-title">Work as one team</p>
+        <p class="cell-desc">Shared workspaces, granular role permissions, real-time presence, and threaded comments keep everyone aligned across time zones.</p>
+        <div class="pill-row"><span class="pill">RBAC</span><span class="pill">Presence</span><span class="pill">Comments</span></div>
+      </div>
+    </div>
+
+    <div class="bento-cell c6" data-col="2" data-row="1">
+      <div class="cell-bg"></div>
+      <div class="cell-inner">
+        <i class="cell-icon ti ti-wand" aria-hidden="true"></i>
+        <span class="cell-tag">Automation</span>
+        <p class="cell-title">Smart workflows</p>
+        <p class="cell-desc">Visual automation builder with conditional logic, loops, and AI steps. Schedule tasks, react to events — no code required.</p>
+        <div class="pill-row"><span class="pill">No-code</span><span class="pill">AI steps</span><span class="pill">Event triggers</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const grid  = document.getElementById('grid');
+  const cells = Array.from(document.querySelectorAll('.bento-cell'));
+
+  const BASE_COL = 'repeat(3, 1fr)';
+  const BASE_ROW = 'repeat(2, 200px)';
+
+  // When a cell in column C is hovered, that column grows to 2fr; others shrink to 0.75fr
+  // When a cell in row R is hovered, that row grows; others shrink
+  // No cell moves — the grid tracks just resize around the hovered cell
+
+  const COL_TEMPLATES = {
+    0: '2fr 0.75fr 0.75fr',
+    1: '0.75fr 2fr 0.75fr',
+    2: '0.75fr 0.75fr 2fr',
+  };
+
+  const ROW_TEMPLATES = {
+    0: '2fr 0.75fr',
+    1: '0.75fr 2fr',
+  };
+
+  let leaveTimer = null;
+
+  cells.forEach(cell => {
+    cell.addEventListener('mouseenter', () => {
+      clearTimeout(leaveTimer);
+
+      const col = parseInt(cell.dataset.col);
+      const row = parseInt(cell.dataset.row);
+
+      cells.forEach(c => c.classList.remove('active'));
+      cell.classList.add('active');
+
+      grid.style.gridTemplateColumns = COL_TEMPLATES[col];
+      grid.style.gridTemplateRows    = ROW_TEMPLATES[row];
+    });
+
+    cell.addEventListener('mouseleave', () => {
+      leaveTimer = setTimeout(() => {
+        cells.forEach(c => c.classList.remove('active'));
+        grid.style.gridTemplateColumns = BASE_COL;
+        grid.style.gridTemplateRows    = BASE_ROW;
+      }, 80);
+    });
+  });
+</script>

@@ -23,6 +23,18 @@ from .onchain_trade_logger import OnchainTradeLogger
 from .executor.pancake_executor_stub import PancakeExecutorStub, compute_amount as pancake_compute_amount
 from .market.price_listener import PriceListener
 from . import hub_callback
+import hashlib
+
+
+def _strategy_hash(name: str | None) -> str | None:
+    """Stable identifier for a strategy. Prefer STRATEGY_CODE_HASH env (marketplace),
+    else sha256 hex of the canonical name (builtin)."""
+    if not name:
+        return None
+    env_hash = os.getenv("STRATEGY_CODE_HASH", "").strip()
+    if env_hash:
+        return env_hash
+    return hashlib.sha256(name.strip().lower().encode()).hexdigest()
 
 
 class TradingEngine:
@@ -524,10 +536,12 @@ class TradingEngine:
             log_emit("action", f"[ACTION] OPEN_LONG at ${price:,.2f} - {reason}")
 
             if self._agent_id:
+                _sname = self.strategy_plan.strategy if self.strategy_plan else None
                 asyncio.ensure_future(hub_callback.report_trade({
                     "agent_id": self._agent_id, "side": "long", "entry_price": price,
                     "size_usdt": self.amount_usdt, "leverage": self.leverage,
-                    "strategy": self.strategy_plan.strategy if self.strategy_plan else None,
+                    "strategy": _sname,
+                    "strategy_hash": _strategy_hash(_sname),
                 }))
 
             asyncio.ensure_future(self._log_trade_onchain(
@@ -554,10 +568,12 @@ class TradingEngine:
             log_emit("action", f"[ACTION] OPEN_SHORT at ${price:,.2f} - {reason}")
 
             if self._agent_id:
+                _sname = self.strategy_plan.strategy if self.strategy_plan else None
                 asyncio.ensure_future(hub_callback.report_trade({
                     "agent_id": self._agent_id, "side": "short", "entry_price": price,
                     "size_usdt": self.amount_usdt, "leverage": self.leverage,
-                    "strategy": self.strategy_plan.strategy if self.strategy_plan else None,
+                    "strategy": _sname,
+                    "strategy_hash": _strategy_hash(_sname),
                 }))
 
             asyncio.ensure_future(self._log_trade_onchain(
@@ -578,11 +594,13 @@ class TradingEngine:
                 log_emit("action", f"[ACTION] Realized PnL: {pnl:+.2f} USDT")
 
                 if self._agent_id:
+                    _sname = self.strategy_plan.strategy if self.strategy_plan else None
                     asyncio.ensure_future(hub_callback.report_trade({
                         "agent_id": self._agent_id, "side": self.position.side.value.lower(),
                         "entry_price": entry, "exit_price": price, "pnl": pnl,
                         "size_usdt": self.position.size_usdt, "leverage": self.position.leverage,
-                        "strategy": self.strategy_plan.strategy if self.strategy_plan else None,
+                        "strategy": _sname,
+                        "strategy_hash": _strategy_hash(_sname),
                         "close_reason": reason,
                     }))
 
@@ -681,10 +699,12 @@ class TradingEngine:
         if not self._trade_logger._enabled:
             return
         try:
+            _sname = self.strategy_plan.strategy if self.strategy_plan else None
             detail = _json.dumps({
                 "size_usdt": self.amount_usdt,
                 "leverage": self.leverage,
-                "strategy": self.strategy_plan.strategy if self.strategy_plan else None,
+                "strategy": _sname,
+                "strategy_hash": _strategy_hash(_sname),
                 "reason": reason,
             })
             tx_hash = await self._trade_logger.log_trade(

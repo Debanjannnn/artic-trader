@@ -14,7 +14,7 @@ from ..db.base import get_session
 from ..db.models.auth_nonce import AuthNonce
 from ..db.models.auth_session_key import AuthSessionKey
 from ..db.models.user import User
-from . import initia_names, service, session as session_svc
+from . import service, session as session_svc
 from .deps import get_current_user, require_session_key
 from .verifiers import get_verifier
 
@@ -178,25 +178,16 @@ async def verify_signature(
         )
     )
     user = existing.scalar_one_or_none()
-    init_name = await initia_names.resolve_init_name(body.address)
     if user is None:
         user = User(
             wallet_address=body.address,
             wallet_chain=body.chain,
-            init_username=init_name,
-            init_username_resolved_at=_now(),
         )
         db.add(user)
         await db.flush()
-        # Lazy-provision a user_vms row on first sign-in so the wake-proxy
-        # middleware can wake on first /u/* request. Actual VM start is deferred.
         from ..vm import get_service as _get_vm_service
 
         await _get_vm_service().provision_for_user(db, user.id)
-    else:
-        if init_name or initia_names.is_stale(user.init_username_resolved_at):
-            user.init_username = init_name
-            user.init_username_resolved_at = _now()
 
     sess = AuthSessionKey(
         user_id=user.id,
@@ -224,7 +215,7 @@ async def verify_signature(
     return VerifyResponse(
         access_token=service.create_jwt(user.id),
         session_id=sess.id,
-        init_username=user.init_username,
+        init_username=None,
     )
 
 
@@ -257,18 +248,11 @@ async def me(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    # Background refresh of .init if stale
-    if initia_names.is_stale(user.init_username_resolved_at):
-        fresh = await initia_names.resolve_init_name(user.wallet_address)
-        user.init_username = fresh
-        user.init_username_resolved_at = _now()
-        await db.commit()
-        await db.refresh(user)
     return MeResponse(
         id=user.id,
         wallet_address=user.wallet_address,
         wallet_chain=user.wallet_chain,
-        init_username=user.init_username,
+        init_username=None,
     )
 
 

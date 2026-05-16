@@ -2,6 +2,8 @@
 
 import { useState, useRef, type ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ThemeToggle } from "./theme-toggle";
 import {
   Menu,
   X,
@@ -123,7 +125,7 @@ function PanelVisual({ colors, icon }: { colors: [string, string]; icon: ReactNo
       />
       {/* Centered icon */}
       <motion.div
-        className="absolute inset-0 flex items-center justify-center text-white/90 [&>svg]:w-10 [&>svg]:h-10 drop-shadow-lg"
+        className="absolute inset-0 flex items-center justify-center text-foreground/90 [&>svg]:w-10 [&>svg]:h-10 drop-shadow-lg"
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ ...springBouncy, delay: 0.1 }}
@@ -142,6 +144,8 @@ export function Navbar() {
   const [hoveredItem, setHoveredItem] = useState<DropdownItem | null>(null);
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pathname = usePathname();
+  const showThemeToggle = pathname === "/landing";
 
   const startClose = () => {
     closeTimer.current = setTimeout(() => setActiveDropdown(null), 200);
@@ -156,8 +160,8 @@ export function Navbar() {
         className={cn(
           "max-w-5xl mx-auto px-5 h-14 flex items-center justify-between",
           "rounded-full backdrop-blur-xl",
-          "bg-gradient-to-tl from-black/90 via-black/75 to-black/60",
-          "border border-white/10 ring-1 ring-inset ring-white/5",
+          "bg-gradient-to-tl from-background/90 via-background/75 to-background/60",
+          "border border-foreground/10 ring-1 ring-inset ring-foreground/5",
           "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.06)]"
         )}
       >
@@ -174,7 +178,7 @@ export function Navbar() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="relative px-4 py-2 text-sm font-medium text-white/60 hover:text-white transition-colors duration-150 rounded-full"
+                  className="relative px-4 py-2 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors duration-150 rounded-full"
                   onMouseEnter={() => { cancelClose(); setActiveDropdown(null); }}
                 >
                   <span className="relative z-10">{item.label}</span>
@@ -188,7 +192,7 @@ export function Navbar() {
                 <button
                   className={cn(
                     "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full transition-colors duration-150",
-                    isOpen ? "text-white" : "text-white/60 hover:text-white"
+                    isOpen ? "text-foreground" : "text-foreground/60 hover:text-foreground"
                   )}
                   onMouseEnter={() => {
                     cancelClose();
@@ -199,7 +203,7 @@ export function Navbar() {
                   {isOpen && (
                     <motion.div
                       layoutId="nav-pill"
-                      className="absolute inset-0 bg-white/10 rounded-full"
+                      className="absolute inset-0 bg-foreground/10 rounded-full"
                       transition={springSnappy}
                     />
                   )}
@@ -219,7 +223,7 @@ export function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.96 }}
                       transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
-                      className="absolute top-full left-0 lg:left-1/2 lg:-translate-x-1/2 mt-3 w-[480px] flex bg-[#12121a] border border-white/[0.08] rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.6)] overflow-hidden z-50"
+                      className="absolute top-full left-0 lg:left-1/2 lg:-translate-x-1/2 mt-3 w-[480px] flex bg-card border border-foreground/[0.08] rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.6)] overflow-hidden z-50"
                       onMouseEnter={cancelClose}
                       onMouseLeave={startClose}
                     >
@@ -227,9 +231,9 @@ export function Navbar() {
                         <div className="flex-1 p-4 space-y-3 min-w-0">
                           {item.groups.map((group, gi) => (
                             <div key={group.heading || gi}>
-                              {gi > 0 && <div className="h-px bg-white/5 mx-3 my-1" />}
+                              {gi > 0 && <div className="h-px bg-foreground/5 mx-3 my-1" />}
                               {group.heading && (
-                                <p className="text-[10px] uppercase tracking-wider font-semibold text-white/40 px-3 mb-1 mt-1">
+                                <p className="text-[10px] uppercase tracking-wider font-semibold text-foreground/40 px-3 mb-1 mt-1">
                                   {group.heading}
                                 </p>
                               )}
@@ -249,8 +253,8 @@ export function Navbar() {
                                     />
                                   )}
                                   <div className="relative z-10 min-w-0">
-                                    <p className="text-sm font-medium text-white">{di.name}</p>
-                                    <p className="text-xs text-white/40">{di.desc}</p>
+                                    <p className="text-sm font-medium text-foreground">{di.name}</p>
+                                    <p className="text-xs text-foreground/40">{di.desc}</p>
                                   </div>
                                 </Link>
                               ))}
@@ -259,7 +263,7 @@ export function Navbar() {
                         </div>
                       </LayoutGroup>
 
-                      <div className="w-[180px] p-3 shrink-0 border-l border-white/[0.06]">
+                      <div className="w-[180px] p-3 shrink-0 border-l border-foreground/[0.06]">
                         <AnimatePresence mode="wait">
                           {hoveredItem && (
                             <PanelVisual key={hoveredItem.name} colors={hoveredItem.colors} icon={hoveredItem.icon} />
@@ -273,12 +277,14 @@ export function Navbar() {
             );
           })}
 
+          {showThemeToggle && <ThemeToggle className="ml-2" />}
+
           <Link
             href="/connect"
             onMouseEnter={() => { cancelClose(); setActiveDropdown(null); }}
             className={cn(
               buttonVariants({ size: "sm" }),
-              "ml-3 h-9 px-4 text-sm font-semibold rounded-2xl text-white border border-cta-border/40 bg-linear-to-b from-cta-light! to-cta! hover:from-cta! hover:to-cta-hover! transition-colors"
+              "ml-3 h-9 px-4 text-sm font-semibold rounded-2xl text-foreground border border-cta-border/40 bg-linear-to-b from-cta-light! to-cta! hover:from-cta! hover:to-cta-hover! transition-colors"
             )}
           >
             Launch App <ArrowRightIcon className="w-4 h-4 ml-1" />
@@ -288,7 +294,7 @@ export function Navbar() {
         {/* Mobile toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 text-white/60"
+          className="md:hidden p-2 text-foreground/60"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -302,7 +308,7 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden mx-4 mt-2 rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 overflow-hidden"
+            className="md:hidden mx-4 mt-2 rounded-2xl bg-background/90 backdrop-blur-xl border border-foreground/10 overflow-hidden"
           >
             <div className="p-6 space-y-2">
               {navItems.map((item) => {
@@ -312,7 +318,7 @@ export function Navbar() {
                       key={item.label}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      className="block text-sm font-medium py-2 text-white/60 hover:text-white transition-colors"
+                      className="block text-sm font-medium py-2 text-foreground/60 hover:text-foreground transition-colors"
                     >
                       {item.label}
                     </Link>
@@ -324,7 +330,7 @@ export function Navbar() {
                   <div key={item.label}>
                     <button
                       onClick={() => setMobileExpandedSection(isExpanded ? null : item.label)}
-                      className="flex items-center justify-between w-full text-sm font-medium py-2 text-white/60 hover:text-white transition-colors"
+                      className="flex items-center justify-between w-full text-sm font-medium py-2 text-foreground/60 hover:text-foreground transition-colors"
                     >
                       {item.label}
                       <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -341,7 +347,7 @@ export function Navbar() {
                           {item.groups.map((g, gi) => (
                             <div key={g.heading || gi} className="pl-4 mt-2">
                               {g.heading && (
-                                <p className="text-[10px] uppercase text-white/30 tracking-wider mb-1 font-semibold">
+                                <p className="text-[10px] uppercase text-foreground/30 tracking-wider mb-1 font-semibold">
                                   {g.heading}
                                 </p>
                               )}
@@ -350,7 +356,7 @@ export function Navbar() {
                                   key={di.name}
                                   href={di.href}
                                   onClick={() => setMobileOpen(false)}
-                                  className="block py-1.5 text-sm text-white/50 hover:text-white transition-colors"
+                                  className="block py-1.5 text-sm text-foreground/50 hover:text-foreground transition-colors"
                                 >
                                   {di.name}
                                 </Link>
@@ -369,7 +375,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   buttonVariants(),
-                  "block w-full text-center px-5 py-2.5 text-sm font-semibold rounded-2xl text-white border border-cta-border bg-linear-to-b from-cta-light! to-cta! hover:from-cta! hover:to-cta-hover! mt-4 transition-colors"
+                  "block w-full text-center px-5 py-2.5 text-sm font-semibold rounded-2xl text-foreground border border-cta-border bg-linear-to-b from-cta-light! to-cta! hover:from-cta! hover:to-cta-hover! mt-4 transition-colors"
                 )}
               >
                 Launch App →

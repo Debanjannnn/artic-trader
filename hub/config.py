@@ -36,6 +36,16 @@ class Settings(BaseSettings):
     CANDLE_STALENESS_SECONDS: int = 60
     PRICE_POLL_SECONDS: float = 2.0
 
+    # User-server direct (platform-internal endpoints; used by publish flow)
+    USER_SERVER_INTERNAL_URL: str = "http://localhost:8001"
+    PUBLISH_BACKTEST_TIMEOUT_SECONDS: float = 60.0
+
+    # Mantle on-chain (StrategyRegistry + BacktestAttest)
+    MANTLE_RPC_URL: str = ""
+    MANTLE_PRIVATE_KEY: str = ""
+    STRATEGY_REGISTRY_ADDRESS: str = ""
+    BACKTEST_ATTEST_ADDRESS: str = ""
+
     # Proxy
     PROXY_CONNECT_TIMEOUT_SECONDS: float = 5.0
     PROXY_READ_TIMEOUT_SECONDS: float = 10.0
@@ -55,10 +65,18 @@ class Settings(BaseSettings):
     AUTH_MESSAGE_DOMAIN: str = "artic.trade"
     AUTH_NONCE_TTL_SECONDS: int = 300
     AUTH_SESSION_TTL_SECONDS: int = 604800  # 7d (was 8h)
-    AUTH_SUPPORTED_CHAINS: str = "initia-testnet"  # comma-separated
+    AUTH_SUPPORTED_CHAINS: str = "0g-mainnet"
 
-    # Initia .init name service
-    INITIA_NAME_SERVICE_URL: str = ""
+    # 0G Mainnet
+    ZERO_G_RPC_URL: str = "https://evmrpc.0g.ai"
+    ZERO_G_CHAIN_ID: int = 16661
+    ZERO_G_EXPLORER_BASE: str = "https://chainscan.0g.ai"
+    ZERO_G_PRIVATE_KEY: str = ""
+    ZERO_G_COMPUTE_SERVING_BROKER: str = ""
+    ZERO_G_STORAGE_INDEXER_URL: str = "https://indexer-storage-turbo.0g.ai"
+    DECISION_LOGGER_ADDRESS: str = "0x70a15Db526104abC2f021b7c690cd89a07EDE49C"
+    TRADE_LOGGER_ADDRESS: str = "0xeeb56334152D6bDB62aacF56f8DbCceA5210b78D"
+    INFT_CONTRACT_ADDRESS: str = "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

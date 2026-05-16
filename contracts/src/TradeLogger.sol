@@ -10,6 +10,8 @@ contract TradeLogger {
         uint256 exitPrice,
         int16 pnlBps,
         bytes32 detailHash,
+        address teeProvider,
+        bytes teeSignature,
         uint256 timestamp
     );
 
@@ -31,9 +33,22 @@ contract TradeLogger {
         uint256 entryPrice,
         uint256 exitPrice,
         int16 pnlBps,
-        bytes32 detailHash
+        bytes32 detailHash,
+        address teeProvider,
+        bytes calldata teeSignature
     ) external onlyOwner {
-        emit TradeLogged(sessionId, symbol, side, entryPrice, exitPrice, pnlBps, detailHash, block.timestamp);
+        emit TradeLogged(
+            sessionId,
+            symbol,
+            side,
+            entryPrice,
+            exitPrice,
+            pnlBps,
+            detailHash,
+            teeProvider,
+            teeSignature,
+            block.timestamp
+        );
     }
 
     function transferOwnership(address newOwner) external onlyOwner {

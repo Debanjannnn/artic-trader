@@ -19,6 +19,7 @@ from .logs.query import router as logs_query_router
 from .logs.ws import router as logs_ws_router
 from .llm.router import router as llm_router
 from .otel import setup as otel_setup
+from .strategies.publish_router import router as publish_router
 from .strategies.router import router as strategies_router
 from .utils.wait_for_schema import wait_for_schema
 
@@ -55,6 +56,7 @@ register_error_handlers(app)
 app.include_router(agents_router)
 app.include_router(agent_push_router)
 app.include_router(strategies_router)
+app.include_router(publish_router)
 app.include_router(llm_router)
 app.include_router(indexer_query_router)
 app.include_router(trades_query_router)

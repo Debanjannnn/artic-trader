@@ -12,7 +12,48 @@ from ..schemas import StrategyPlan, MarketRegimeSummary, SupervisorResponse
 from ..market.market import MarketData
 from ..market.market_analysis import MarketAnalyzer
 
-Provider = Literal["openai", "anthropic", "deepseek", "gemini"]
+Provider = Literal["openai", "anthropic", "deepseek", "gemini", "0g_compute"]
+
+# Last TEE signature captured from a 0G Compute call. Read by onchain_logger
+# to fold TEE attestation into reasoningHash. Module-global so the existing
+# callsites don't need new return-types.
+LAST_TEE_SIGNATURE: str = ""
+LAST_TEE_VERIFIED: bool = False
+
+# Last 0G Storage pointer for the most recent LLM call (planner or supervisor).
+# Read by onchain_logger so reasoningHash on-chain points at the off-chain
+# full reasoning blob stored on 0G Log Layer.
+LAST_REASONING_CID: Optional[str] = None
+LAST_REASONING_TX: Optional[str] = None
+
+
+def _stash_reasoning(prompt_summary: str, raw_response: str, model: str) -> None:
+    """Upload full LLM reasoning JSON to 0G Storage; cache pointer module-globally.
+
+    Best-effort: any failure leaves LAST_REASONING_CID = None and trading
+    continues unaffected.
+    """
+    global LAST_REASONING_CID, LAST_REASONING_TX
+    LAST_REASONING_CID = None
+    LAST_REASONING_TX = None
+    try:
+        from ..storage import get_client
+        client = get_client()
+        payload = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "model": model,
+            "prompt_summary": prompt_summary[:4000],
+            "raw_response": raw_response[:8000],
+            "tee_signature": LAST_TEE_SIGNATURE or None,
+            "tee_verified": LAST_TEE_VERIFIED,
+        }
+        cid, tx = client.upload_json(payload)
+        LAST_REASONING_CID = cid
+        LAST_REASONING_TX = tx
+        if cid:
+            print(f"[og_storage] reasoning uploaded cid={cid} tx={tx}")
+    except Exception as e:
+        print(f"[og_storage] reasoning upload skipped: {e}")
 
 
 def _extract_json(text: str) -> str:
@@ -101,8 +142,12 @@ class LLMPlanner:
         self.deepseek_api_key = _deepseek if _deepseek else None
         self.gemini_api_key = _gemini if _gemini else None
         self.llm_model_override = (os.getenv("LLM_MODEL") or "").strip() or None
+        # 0G Compute config
+        self.zero_g_compute_secret = (os.getenv("ZERO_G_COMPUTE_SECRET") or "").strip() or None
+        self.zero_g_compute_provider = (os.getenv("ZERO_G_COMPUTE_PROVIDER") or "").strip() or None
+        self._og_compute_client = None
         _provider = (llm_provider or os.getenv("LLM_PROVIDER") or "").strip().lower()
-        if _provider in ("openai", "anthropic", "deepseek", "gemini"):
+        if _provider in ("openai", "anthropic", "deepseek", "gemini", "0g_compute"):
             self._llm_provider: Optional[Provider] = _provider
         else:
             self._llm_provider = (
@@ -124,8 +169,13 @@ class LLMPlanner:
             except Exception as e:
                 print(f"[WARN] Failed to initialize MarketData: {e}")
 
+    def _has_og_compute(self) -> bool:
+        return bool(self.zero_g_compute_secret) and bool(self.zero_g_compute_provider)
+
     def _get_provider(self, override: Optional[str] = None) -> Optional[Provider]:
         override = (override or "").strip().lower() or None
+        if override == "0g_compute" and self._has_og_compute():
+            return "0g_compute"
         if override == "openai" and self.openai_api_key:
             return "openai"
         if override == "anthropic" and self.anthropic_api_key:
@@ -134,12 +184,16 @@ class LLMPlanner:
             return "deepseek"
         if override == "gemini" and self.gemini_api_key:
             return "gemini"
+        if override == "0g_compute":
+            print("[LLM] Requested 0G Compute but ZERO_G_COMPUTE_SECRET/PROVIDER not set; falling back.")
         if override == "anthropic":
             print("[LLM] Requested Claude but ANTHROPIC_API_KEY not set; falling back.")
         if override == "deepseek":
             print("[LLM] Requested DeepSeek but DEEPSEEK_API_KEY not set; falling back.")
         if override == "gemini":
             print("[LLM] Requested Gemini but GEMINI_API_KEY not set; falling back.")
+        if self._llm_provider == "0g_compute" and self._has_og_compute():
+            return "0g_compute"
         if self._llm_provider == "openai" and self.openai_api_key:
             return "openai"
         if self._llm_provider == "anthropic" and self.anthropic_api_key:
@@ -148,6 +202,8 @@ class LLMPlanner:
             return "deepseek"
         if self._llm_provider == "gemini" and self.gemini_api_key:
             return "gemini"
+        if self._has_og_compute():
+            return "0g_compute"
         if self.openai_api_key:
             return "openai"
         if self.anthropic_api_key:
@@ -188,6 +244,15 @@ class LLMPlanner:
             )
         return self._deepseek_client
 
+    def _get_og_compute_client(self):
+        if self._og_compute_client is None:
+            from .og_compute import OGComputeClient
+            self._og_compute_client = OGComputeClient(
+                provider_address=self.zero_g_compute_provider,
+                secret=self.zero_g_compute_secret,
+            )
+        return self._og_compute_client
+
     def _get_gemini_client(self):
         if self._gemini_client is None:
             from openai import OpenAI
@@ -209,14 +274,34 @@ class LLMPlanner:
     ) -> str:
         provider = self._get_provider(override=provider_override)
         if not provider:
-            raise ValueError("No LLM provider. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, or GEMINI_API_KEY.")
+            raise ValueError("No LLM provider. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, GEMINI_API_KEY, or ZERO_G_COMPUTE_SECRET+PROVIDER.")
+        # Reset TEE signature; only 0g_compute path repopulates it.
+        global LAST_TEE_SIGNATURE, LAST_TEE_VERIFIED
+        if provider != "0g_compute":
+            LAST_TEE_SIGNATURE = ""
+            LAST_TEE_VERIFIED = False
         model_defaults = {
             "openai": "gpt-4o-mini",
             "deepseek": "deepseek-chat",
             "gemini": "gemini-2.0-flash",
             "anthropic": "claude-sonnet-4-5",
+            "0g_compute": None,  # discovered from registry
         }
         model = self.llm_model_override or model_defaults[provider]
+        if provider == "0g_compute":
+            client = self._get_og_compute_client()
+            result = client.chat(
+                messages=[
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": user_content},
+                ],
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            LAST_TEE_SIGNATURE = result.signature
+            LAST_TEE_VERIFIED = result.tee_verified
+            return result.content
         if provider in ("openai", "deepseek", "gemini"):
             client = {"openai": self._get_openai_client, "deepseek": self._get_deepseek_client, "gemini": self._get_gemini_client}[provider]()
             kwargs = dict(
@@ -342,6 +427,11 @@ Return ONLY valid JSON:
 For paper trading use threshold 0.00003-0.0001 to fire trades often (this is paper, not real money). Choose from: {', '.join(strategy_shortlist)}"""
         system = "Return valid JSON only. No other text."
         content = self._chat(system_content=system, user_content=prompt, temperature=0.3, max_tokens=1024, provider_override=llm_provider)
+        _stash_reasoning(
+            prompt_summary=f"plan symbol={symbol} risk={risk_profile} shortlist={strategy_shortlist}",
+            raw_response=content,
+            model=(llm_provider or "default"),
+        )
         content = _extract_json(content)
         return StrategyPlan(**json.loads(content))
 
@@ -373,6 +463,11 @@ For paper trading use threshold 0.00003-0.0001 to fire trades often (this is pap
 Return JSON only: {{"action": "KEEP"|"CLOSE"|"ADJUST_TP_SL", "reasoning": "..."}}
 KEEP=position fine. CLOSE=close now. ADJUST_TP_SL only if dynamic mode."""
             content = self._chat(system_content="Return valid JSON only.", user_content=prompt, temperature=0.2, max_tokens=200, provider_override=llm_provider)
+            _stash_reasoning(
+                prompt_summary=f"supervisor {symbol} side={side} pnl_pct={unrealized_pnl_pct:.4f} strat={strategy_name}",
+                raw_response=content,
+                model=(llm_provider or "default"),
+            )
             for marker in ["```json", "```"]:
                 if marker in content:
                     parts = content.split(marker, 1)

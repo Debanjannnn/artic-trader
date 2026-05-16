@@ -74,7 +74,7 @@ async def ws_agent_logs(ws: WebSocket, agent_id: str, token: str = Query(default
     base = state.endpoint.rstrip("/")
     ws_base = base.replace("https://", "wss://").replace("http://", "ws://")
     upstream_url = f"{ws_base}/hub/ws/agents/{agent_id}/logs"
-    headers = {"X-Hub-Secret": settings.HUB_SECRET or settings.INTERNAL_SECRET or ""}
+    headers = {"X-Hub-Secret": settings.INTERNAL_SECRET or ""}
 
     await ws.accept()
     try:

@@ -88,20 +88,23 @@ def build_env(
 ) -> dict[str, str]:
     """Compose the env dict per docs/alpha/plans/user-vm.md §Agent env.
 
-    Forwards Initia rollup config from the user-server's environment so the
-    agent container can sign DecisionLogger / TradeLogger txs.
+    Forwards 0G mainnet chain + Compute config from user-server env so the
+    agent container can sign DecisionLogger / TradeLogger txs and call the
+    0G Compute TeeML proxy.
     """
     import json
     import os
 
     chain_env: dict[str, str] = {}
     for key in (
-        "INITIA_RPC_URL",
-        "INITIA_PRIVATE_KEY",
-        "INITIA_CHAIN_ID",
-        "INITIA_EXPLORER_BASE",
-        "CHAIN_RPC_URL",
-        "CHAIN_PRIVATE_KEY",
+        "ZERO_G_RPC_URL",
+        "ZERO_G_PRIVATE_KEY",
+        "ZERO_G_CHAIN_ID",
+        "ZERO_G_EXPLORER_BASE",
+        "ZERO_G_COMPUTE_SECRET",
+        "ZERO_G_COMPUTE_PROVIDER",
+        "ZERO_G_COMPUTE_SERVING_BROKER",
+        "ZERO_G_STORAGE_INDEXER_URL",
     ):
         v = os.getenv(key)
         if v:

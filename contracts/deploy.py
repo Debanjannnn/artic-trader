@@ -1,13 +1,21 @@
-"""Deploy DecisionLogger to the configured Initia rollup (or any EVM RPC).
+"""Deploy DecisionLogger to 0G Mainnet (chain 16661, https://evmrpc.0g.ai).
 
-Reads INITIA_RPC_URL / INITIA_PRIVATE_KEY (preferred), falls back to
-CHAIN_* / HSK_* for backward-compat. Records chain_id alongside the address
-in deployed.json so the runtime can render explorer links.
+Reads ZERO_G_RPC_URL / ZERO_G_PRIVATE_KEY from .env.local. Records chain_id
+alongside the address in deployed.json.
 """
 import os
 import json
+from pathlib import Path
 from web3 import Web3
 from solcx import compile_source, install_solc
+
+try:
+    from dotenv import load_dotenv
+    _ENV_PATH = Path(__file__).resolve().parent.parent / ".env.local"
+    if _ENV_PATH.exists():
+        load_dotenv(_ENV_PATH, override=False)
+except ImportError:
+    pass
 
 
 def _resolve(env_names):
@@ -34,14 +42,14 @@ def deploy():
     abi = contract_interface["abi"]
     bytecode = contract_interface["bin"]
 
-    rpc = _resolve(["INITIA_RPC_URL", "CHAIN_RPC_URL", "HSK_RPC_URL"])
-    pk = _resolve(["INITIA_PRIVATE_KEY", "CHAIN_PRIVATE_KEY", "HSK_PRIVATE_KEY"])
-    chain_id_env = _resolve(["INITIA_CHAIN_ID", "CHAIN_ID"])
+    rpc = _resolve(["ZERO_G_RPC_URL"])
+    pk = _resolve(["ZERO_G_PRIVATE_KEY"])
+    chain_id_env = _resolve(["ZERO_G_CHAIN_ID"]) or "16661"
 
     if not rpc:
-        raise ValueError("INITIA_RPC_URL not set in environment")
+        raise ValueError("ZERO_G_RPC_URL not set in environment")
     if not pk:
-        raise ValueError("INITIA_PRIVATE_KEY not set in environment")
+        raise ValueError("ZERO_G_PRIVATE_KEY not set in environment")
 
     w3 = Web3(Web3.HTTPProvider(rpc))
     if not w3.is_connected():

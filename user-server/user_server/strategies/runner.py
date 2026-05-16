@@ -116,3 +116,84 @@ def run(
 def _fallback(plan: dict, price_history: list[float], candles: list | None, *, error: str) -> RunResult:
     sig = simple_momentum(plan, price_history, candles)
     return RunResult(signal=sig, strategy_name="simple_momentum", fallback=True, error=error)
+
+
+# ---------------------------------------------------------------------------
+# Style-B ABI: on_tick(ctx) -> {"action", "size", "reason"}.
+# AST-whitelisted sandbox; coexists with the legacy `compute(...)` runner above.
+# ---------------------------------------------------------------------------
+
+import hashlib  # noqa: E402
+from typing import Callable, NamedTuple, Optional  # noqa: E402
+
+from .sandbox import (  # noqa: E402
+    RuntimeViolation,
+    TimeoutViolation,
+    make_safe_globals,
+    parse_and_validate,
+)
+
+VALID_ACTIONS = frozenset({"OPEN_LONG", "OPEN_SHORT", "CLOSE", "HOLD"})
+
+
+class StrategyHandle(NamedTuple):
+    on_tick: Callable[[dict], dict]
+    on_init: Optional[Callable[[dict], None]]
+    on_close: Optional[Callable[[dict], None]]
+    get_params: Optional[Callable[[], dict]]
+    code_hash: str
+
+
+def load_strategy(source: str) -> StrategyHandle:
+    """Validate, compile, and exec a Style-B strategy. Returns a callable handle."""
+    tree = parse_and_validate(source)
+    code = compile(tree, filename="<strategy>", mode="exec")
+    namespace: dict = make_safe_globals()
+    try:
+        exec(code, namespace)  # noqa: S102 — sandboxed namespace
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeViolation(f"load failed: {type(exc).__name__}: {exc}") from exc
+
+    on_tick = namespace.get("on_tick")
+    if not callable(on_tick):
+        raise RuntimeViolation("strategy missing required `on_tick(ctx)` function")
+
+    return StrategyHandle(
+        on_tick=on_tick,
+        on_init=namespace.get("on_init") if callable(namespace.get("on_init")) else None,
+        on_close=namespace.get("on_close") if callable(namespace.get("on_close")) else None,
+        get_params=namespace.get("get_params") if callable(namespace.get("get_params")) else None,
+        code_hash=hashlib.sha256(source.encode("utf-8")).hexdigest(),
+    )
+
+
+def _alarm_handler(_signum, _frame):
+    raise TimeoutViolation("strategy on_tick exceeded wall-clock budget")
+
+
+def tick(handle: StrategyHandle, ctx: dict, timeout_s: int = 2) -> dict:
+    """Invoke handle.on_tick(ctx) under a SIGALRM cap. Validates result shape."""
+    old_handler = signal.signal(signal.SIGALRM, _alarm_handler)
+    signal.alarm(timeout_s)
+    try:
+        result = handle.on_tick(ctx)
+    except TimeoutViolation:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeViolation(f"on_tick raised: {type(exc).__name__}: {exc}") from exc
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
+
+    if not isinstance(result, dict):
+        raise RuntimeViolation(f"on_tick must return dict, got {type(result).__name__}")
+    action = result.get("action")
+    if action not in VALID_ACTIONS:
+        raise RuntimeViolation(f"invalid action {action!r}; must be one of {sorted(VALID_ACTIONS)}")
+    size = result.get("size", 0)
+    if not isinstance(size, (int, float)) or not (0 <= float(size) <= 1):
+        raise RuntimeViolation(f"invalid size {size!r}; must be number in [0, 1]")
+    reason = result.get("reason", "")
+    if not isinstance(reason, str):
+        raise RuntimeViolation(f"invalid reason; must be str, got {type(reason).__name__}")
+    return {"action": action, "size": float(size), "reason": reason}

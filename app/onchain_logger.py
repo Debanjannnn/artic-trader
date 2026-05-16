@@ -1,13 +1,11 @@
-"""Log supervisor decisions to Initia rollup via DecisionLogger contract."""
+"""Log supervisor decisions to 0G Mainnet via DecisionLogger contract."""
 import os
 import json
-import hashlib
 from typing import Optional
 from web3 import Web3
 
 from app.chain_config import get_rpc_url, get_private_key
 
-# Strategy name → uint8 index mapping
 STRATEGY_INDEX = {
     "simple_momentum": 0, "dual_momentum": 1,
     "z_score": 2, "bollinger_reversion": 3, "rsi_signal": 4, "stochastic_signal": 5,
@@ -26,9 +24,23 @@ STRATEGY_INDEX = {
 
 ACTION_MAP = {"HOLD": 0, "OPEN_LONG": 1, "OPEN_SHORT": 2, "CLOSE": 3, "ADJUST": 4}
 
+ZERO_ADDR = "0x0000000000000000000000000000000000000000"
+
+
+def _hex_to_bytes(s: str) -> bytes:
+    if not s:
+        return b""
+    s = s.strip()
+    if s.startswith("0x") or s.startswith("0X"):
+        s = s[2:]
+    try:
+        return bytes.fromhex(s)
+    except ValueError:
+        return s.encode("utf-8")
+
 
 class OnchainLogger:
-    """Logs trading decisions to HashKey Chain DecisionLogger contract."""
+    """Logs trading decisions to 0G DecisionLogger contract."""
 
     def __init__(self):
         rpc = get_rpc_url()
@@ -60,34 +72,36 @@ class OnchainLogger:
         pnl_bps: int,
         reasoning: str,
     ) -> Optional[str]:
-        """Log decision on-chain. Returns tx hash or None if disabled.
-
-        Args:
-            agent_id: Agent identifier
-            symbol: Trading symbol (e.g., BTC/USD)
-            action: Action taken (HOLD/OPEN_LONG/OPEN_SHORT/CLOSE/ADJUST)
-            strategy: Strategy name
-            confidence: Confidence level (0-100)
-            pnl_bps: PnL in basis points
-            reasoning: Full LLM reasoning text
-
-        Returns:
-            Transaction hash (hex string) or None if disabled
-        """
         if not self._enabled:
             return None
 
         import asyncio
 
-        # Build event params
         timestamp = int(__import__("time").time())
         session_id = self._w3.keccak(text=f"{symbol}{agent_id}{timestamp}")
         symbol_bytes = self._w3.keccak(text=symbol)[:32]
         action_uint = ACTION_MAP.get(action, 0)
         strategy_uint = STRATEGY_INDEX.get(strategy, 255)
-        reasoning_hash = self._w3.keccak(text=reasoning)
 
-        # Build + send tx
+        try:
+            from app.llm.llm_planner import LAST_TEE_SIGNATURE  # type: ignore
+        except Exception:
+            LAST_TEE_SIGNATURE = ""
+        try:
+            from app.llm.llm_planner import LAST_REASONING_CID  # type: ignore
+        except Exception:
+            LAST_REASONING_CID = None
+
+        reasoning_payload = f"og:{LAST_REASONING_CID}" if LAST_REASONING_CID else reasoning
+        reasoning_hash = self._w3.keccak(text=reasoning_payload)
+
+        tee_sig_bytes = _hex_to_bytes(LAST_TEE_SIGNATURE)
+        tee_provider = os.getenv("ZERO_G_COMPUTE_PROVIDER", "").strip()
+        if not (tee_provider and Web3.is_address(tee_provider)):
+            tee_provider = ZERO_ADDR
+        else:
+            tee_provider = Web3.to_checksum_address(tee_provider)
+
         def _send():
             nonce = self._w3.eth.get_transaction_count(self._account.address)
             tx = self._contract.functions.logDecision(
@@ -98,11 +112,13 @@ class OnchainLogger:
                 min(confidence, 100),
                 pnl_bps,
                 reasoning_hash,
+                tee_provider,
+                tee_sig_bytes,
             ).build_transaction(
                 {
                     "from": self._account.address,
                     "nonce": nonce,
-                    "gas": 100000,
+                    "gas": 250000,
                     "gasPrice": self._w3.eth.gas_price,
                 }
             )
@@ -110,5 +126,4 @@ class OnchainLogger:
             tx_hash = self._w3.eth.send_raw_transaction(signed.raw_transaction)
             return tx_hash.hex()
 
-        tx_hash = await asyncio.to_thread(_send)
-        return tx_hash
+        return await asyncio.to_thread(_send)

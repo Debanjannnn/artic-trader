@@ -4,11 +4,13 @@ import Link from "next/link"
 import { use, useState } from "react"
 import { ArrowLeft, Download, Flag } from "lucide-react"
 import { PageHeader } from "@/components/dashboard/empty-state"
-import { PendingHub } from "@/components/dashboard/pending-hub"
-import { DemoBadge } from "@/components/dashboard/demo-badge"
 import { Skeleton } from "@/components/dashboard/skeleton"
 import { ReportDialog } from "@/components/marketplace/report-dialog"
-import { useMarketplaceItem } from "@/hooks/use-queries"
+import {
+  useInstallStrategy,
+  useMarketplaceItem,
+  useReportStrategy,
+} from "@/hooks/use-queries"
 
 export default function MarketplaceDetailPage({
   params,
@@ -18,6 +20,9 @@ export default function MarketplaceDetailPage({
   const { id } = use(params)
   const { data: item, isLoading } = useMarketplaceItem(id)
   const [reportOpen, setReportOpen] = useState(false)
+  const install = useInstallStrategy()
+  const report = useReportStrategy()
+  const [installed, setInstalled] = useState(false)
 
   return (
     <div className="space-y-8">
@@ -48,14 +53,12 @@ export default function MarketplaceDetailPage({
               >
                 {item.reports} reports
               </span>
-              <span className="text-foreground/30">·</span>
-              <DemoBadge />
             </span>
           ) : isLoading ? (
             <span className="text-foreground/40">Loading…</span>
           ) : (
             <>
-              Unknown listing — this id isn&apos;t in the demo fixture set.{" "}
+              Listing not found.{" "}
               <Link href="/app/marketplace" className="underline hover:text-foreground">
                 browse all
               </Link>
@@ -65,11 +68,21 @@ export default function MarketplaceDetailPage({
         action={
           <div className="flex items-center gap-2">
             <button
-              disabled
-              title="Hub auth wiring pending"
-              className="inline-flex cursor-not-allowed items-center gap-2 rounded-md border border-[var(--color-orange)]/40 bg-[var(--color-orange)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-orange-text)] opacity-50"
+              onClick={() =>
+                item &&
+                install.mutate(item.id, {
+                  onSuccess: () => setInstalled(true),
+                })
+              }
+              disabled={!item || install.isPending || installed}
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-orange)]/40 bg-[var(--color-orange)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-orange-text)] transition hover:bg-[var(--color-orange)]/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Download size={14} /> Install
+              <Download size={14} />
+              {installed
+                ? "Installed"
+                : install.isPending
+                  ? "Installing…"
+                  : "Install"}
             </button>
             <button
               onClick={() => item && setReportOpen(true)}
@@ -82,46 +95,44 @@ export default function MarketplaceDetailPage({
         }
       />
 
-      <PendingHub what="Strategy metadata + code blob load from the hub marketplace." />
+      {install.error && (
+        <div className="rounded-md border border-[var(--color-red)]/30 bg-[var(--color-red)]/10 p-3 text-xs text-[var(--color-red-light)]">
+          {(install.error as Error).message}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-6">
           <Skeleton height={120} />
           <Skeleton height={260} />
         </div>
-      ) : (
-        <>
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
-            <h3 className="mb-2 text-sm font-semibold text-foreground/80">Description</h3>
-            <p className="text-sm text-foreground/70">
-              {item?.description ??
-                "Strategy metadata is served from the hub marketplace table. This placeholder stands in for any id not present in lib/demo-data.ts."}
-            </p>
-          </section>
-
-          {item && (
-            <section className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground/80">Code preview</h3>
-                <span className="font-mono text-[11px] text-foreground/40">
-                  created {item.created_at.slice(0, 10)}
-                </span>
-              </div>
-              <pre className="max-h-96 overflow-auto rounded bg-black/40 p-4 font-mono text-xs leading-relaxed text-foreground/70">
-                {item.code_preview}
-              </pre>
-              <p className="mt-3 text-[11px] text-foreground/40">
-                Runs sandboxed: no filesystem, no network, no subprocess. 500ms CPU + 64MB memory caps.
-              </p>
-            </section>
-          )}
-        </>
-      )}
+      ) : item ? (
+        <section className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground/80">Description</h3>
+            <span className="font-mono text-[11px] text-foreground/40">
+              published {item.created_at.slice(0, 10)}
+            </span>
+          </div>
+          <p className="text-sm text-foreground/70">
+            {item.description || "No description."}
+          </p>
+          <p className="mt-3 text-[11px] text-foreground/40">
+            Runs sandboxed: no filesystem, no network, no subprocess. 500ms CPU + 64MB memory caps.
+          </p>
+        </section>
+      ) : null}
 
       <ReportDialog
         open={reportOpen}
         strategyName={item?.name ?? id}
         onClose={() => setReportOpen(false)}
+        onSubmit={async (reason) => {
+          if (!item) return
+          await report.mutateAsync({ id: item.id, reason })
+        }}
+        submitting={report.isPending}
+        error={report.error ? (report.error as Error).message : null}
       />
     </div>
   )

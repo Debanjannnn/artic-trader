@@ -138,6 +138,42 @@
   --sidebar-ring: rgba(243, 228, 209, 0.55);
 }
 
+/* Scoped light theme — applies only to landing page when toggled. Tokens
+   invert so existing semantic utilities (bg-background, text-foreground,
+   border-border, etc.) swap automatically. */
+.landing-light {
+  color-scheme: light;
+  --background: #F2F0EB;
+  --foreground: #0E141A;
+  --foreground-muted: #4A525E;
+  --card: #FFFFFF;
+  --card-foreground: #0E141A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0E141A;
+  --primary: #0E141A;
+  --primary-foreground: #F2F0EB;
+  --secondary: rgba(14, 20, 26, 0.05);
+  --secondary-foreground: #4A525E;
+  --muted: rgba(14, 20, 26, 0.04);
+  --muted-foreground: rgba(74, 82, 94, 0.9);
+  --accent: rgba(14, 20, 26, 0.08);
+  --accent-foreground: #0E141A;
+  --destructive: #E85F5F;
+  --border: rgba(14, 20, 26, 0.12);
+  --input: rgba(14, 20, 26, 0.15);
+  --ring: rgba(14, 20, 26, 0.4);
+
+  --color-surface: #F2F0EB;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-raised: #FAF8F3;
+  --color-surface-sunken: #E5E1D6;
+
+  --color-accent-warm: #0E141A;
+  --color-accent-warm-hover: #1F262D;
+  --color-accent-warm-soft: rgba(14, 20, 26, 0.06);
+  --color-accent-warm-border: rgba(14, 20, 26, 0.25);
+}
+
 /* Smooth hover lift — borderless surfaces rely on shadow change */
 .hover-lift {
   transition:
@@ -299,6 +335,7 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   }
   html {
     @apply font-sans scroll-smooth;
+    scrollbar-gutter: stable;
   }
   option {
     background-color: #1F2731;

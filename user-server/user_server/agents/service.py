@@ -14,7 +14,7 @@ import logging
 import uuid
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.errors import NotFound, Validation
@@ -86,6 +86,11 @@ async def start(db: AsyncSession, agent_id: uuid.UUID) -> Agent:
     agent = await get(db, agent_id)
     if agent.status == "alive":
         return agent
+    live_count = await db.scalar(
+        select(func.count()).select_from(Agent).where(Agent.status.in_(("alive", "starting")))
+    )
+    if (live_count or 0) >= settings.MAX_AGENTS:
+        raise Validation(f"max agents ({settings.MAX_AGENTS}) already running")
     agent.status = "starting"
     await db.flush()
     import os

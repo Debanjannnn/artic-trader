@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export function CtaBanner() {
   return (
-    <section className="h-[80vh]">
+    <section className="h-screen">
       <div className="relative w-full h-full overflow-hidden isolate">
         {/* Background image */}
         <div className="absolute inset-0 -z-10">
@@ -30,10 +30,10 @@ export function CtaBanner() {
           <p className="text-xs tracking-[1.5px] uppercase text-gray mb-5">
             Get started
           </p>
-          <h2 className="text-[clamp(40px,7vw,96px)] font-bold tracking-tight text-white mb-5 max-w-5xl mx-auto leading-[1.05]">
+          <h2 className="text-[clamp(40px,7vw,96px)] font-bold tracking-tight text-foreground mb-5 max-w-5xl mx-auto leading-[1.05]">
             Spin up your first agent.
           </h2>
-          <p className="text-[17px] text-white/60 mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-[17px] text-foreground/60 mb-10 max-w-xl mx-auto leading-relaxed">
             Connect a wallet, pick a symbol, hand the strategy to an LLM.
             Self-host the stack from GitHub when you want full control.
           </p>
@@ -42,7 +42,7 @@ export function CtaBanner() {
               href="/connect"
               className={cn(
                 buttonVariants(),
-                "rounded-2xl text-white border border-cta-border bg-linear-to-b from-cta-light! to-cta! hover:from-cta! hover:to-cta-hover! px-7 h-12 text-[15px] font-semibold gap-2 transition-colors"
+                "rounded-2xl text-foreground border border-cta-border bg-linear-to-b from-cta-light! to-cta! hover:from-cta! hover:to-cta-hover! px-7 h-12 text-[15px] font-semibold gap-2 transition-colors"
               )}
             >
               Launch app <ArrowRight className="w-4 h-4" />
@@ -51,7 +51,7 @@ export function CtaBanner() {
               href="https://github.com/Dragoon4002/Artic_trader"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "border-white/20 text-white hover:border-white/40 hover:bg-white/5 rounded-full px-7 h-12 text-[15px] font-semibold bg-white/[0.04] backdrop-blur-sm gap-2"
+                "border-foreground/20 text-foreground hover:border-foreground/40 hover:bg-foreground/5 rounded-full px-7 h-12 text-[15px] font-semibold bg-white/[0.04] backdrop-blur-sm gap-2"
               )}
             >
               <GitBranch className="w-4 h-4" /> View on GitHub

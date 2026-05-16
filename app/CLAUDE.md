@@ -1,8 +1,8 @@
 # App Module — Artic
 
 Self-contained FastAPI trading engine. One instance = one symbol. Runs inside a Docker
-container managed by user-server on a Morph VM. Pushes status/trades/logs to user-server
-every tick. Logs AI decisions and trades to Initia MiniEVM on-chain.
+container managed by user-server on a dedicated VM. Pushes status/trades/logs to user-server
+every tick. Logs AI decisions and trades to EVM rollup on-chain.
 
 ## Folder Structure
 
@@ -50,9 +50,10 @@ app/
 | `HUB_URL` | User-server base URL (for callbacks) |
 | `INTERNAL_SECRET` | Auth for user-server push endpoints |
 | `STRATEGY_POOL` | JSON list of allowed strategy names |
-| `LLM_PROVIDER` / `LLM_MODEL` | LLM selection |
+| `LLM_PROVIDER` / `LLM_MODEL` | LLM selection (`openai`/`anthropic`/`deepseek`/`gemini`/`0g_compute` for TEE-sealed inference) |
+| `ZERO_G_COMPUTE_PROVIDER` / `ZERO_G_COMPUTE_SECRET` | 0G Compute TeeML provider addr + app secret (required when `LLM_PROVIDER=0g_compute`) |
 | `RISK_PARAMS` | JSON risk config |
-| `CHAIN_RPC_URL` | Initia MiniEVM JSON-RPC (on-chain logging) |
+| `CHAIN_RPC_URL` | EVM rollup JSON-RPC (on-chain logging) |
 | `CHAIN_PRIVATE_KEY` | Platform wallet private key (on-chain logging) |
 
 ## On-Chain Logging

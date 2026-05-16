@@ -41,13 +41,20 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(bun x *)",
-      "WebFetch(domain:docs.initia.xyz)",
+      "WebFetch(domain:docs.0g.ai)",
       "Bash(bunx --bun tsc --noEmit -p /home/sounak/programming/silonelabs/hashkey/clients/web/tsconfig.json)",
       "Bash(bun run *)",
       "Bash(xargs cat *)",
       "Bash(docker exec *)",
       "Bash(git reset *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "WebFetch(domain:docs.0g.ai)",
+      "WebSearch",
+      "Bash(sudo ss *)",
+      "Bash(sudo lsof *)",
+      "Bash(bunx --bun tsc --noEmit)"
     ],
     "additionalDirectories": [
       "/home/sounak/programming/silonelabs/hashkey/bela-quant-engine",
@@ -58,5 +65,8 @@
       "/home/sounak/programming/silonelabs/artic-web/clients/web/app/api/hub/[...path]",
       "/home/sounak/programming/silonelabs/artic-web/clients/web"
     ]
+  },
+  "enabledPlugins": {
+    "web-asset-generator@web-asset-generator-marketplace": true
   }
 }

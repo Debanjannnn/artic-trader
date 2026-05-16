@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import {
   AlertTriangle,
@@ -14,8 +15,8 @@ import {
   X,
 } from "lucide-react"
 import { PageHeader } from "@/components/dashboard/empty-state"
-import { PendingHub } from "@/components/dashboard/pending-hub"
 import { Toggle } from "@/components/dashboard/toggle"
+import { useCreateStrategy, usePublishStrategy } from "@/hooks/use-queries"
 import {
   ALLOWED_BUILTINS,
   ALLOWED_IMPORTS,
@@ -40,15 +41,21 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
 })
 
 export default function NewStrategyPage() {
+  const router = useRouter()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [code, setCode] = useState(STARTER_CODE)
   const [publish, setPublish] = useState(false)
 
+  const create = useCreateStrategy()
+  const pub = usePublishStrategy()
+  const [submitErr, setSubmitErr] = useState<string | null>(null)
+  const submitting = create.isPending || pub.isPending
+
   const issues = useMemo(() => lintStrategy(code), [code])
   const errCount = issues.filter((i) => i.severity === "error").length
   const warnCount = issues.filter((i) => i.severity === "warn").length
-  const canSave = name.trim().length > 0 && errCount === 0
+  const canSave = name.trim().length > 0 && errCount === 0 && !submitting
 
   const payload = {
     source: "authored",
@@ -56,6 +63,32 @@ export default function NewStrategyPage() {
     description: description.trim(),
     code_blob: code,
     publish_to_marketplace: publish,
+  }
+
+  const onSave = async () => {
+    setSubmitErr(null)
+    try {
+      const created = await create.mutateAsync({
+        name: name.trim(),
+        code,
+      })
+      if (publish) {
+        try {
+          await pub.mutateAsync(created.id)
+        } catch (e: unknown) {
+          setSubmitErr(
+            `Strategy saved but publish failed: ${
+              e instanceof Error ? e.message : String(e)
+            }`,
+          )
+          router.push("/app/strategies")
+          return
+        }
+      }
+      router.push("/app/strategies")
+    } catch (e: unknown) {
+      setSubmitErr(e instanceof Error ? e.message : String(e))
+    }
   }
 
   return (
@@ -84,34 +117,30 @@ export default function NewStrategyPage() {
               Cancel
             </Link>
             <button
-              disabled
+              onClick={onSave}
+              disabled={!canSave}
               title={
-                !canSave
-                  ? errCount > 0
-                    ? `${errCount} lint error${errCount > 1 ? "s" : ""} — fix before save`
-                    : "Name required"
-                  : "Hub auth wiring pending"
+                !canSave && errCount > 0
+                  ? `${errCount} lint error${errCount > 1 ? "s" : ""} — fix before save`
+                  : !canSave && !name.trim()
+                    ? "Name required"
+                    : undefined
               }
-              className="inline-flex cursor-not-allowed items-center gap-2 rounded-md border border-[var(--color-orange)]/40 bg-[var(--color-orange)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-orange-text)] opacity-50"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--color-orange)]/40 bg-[var(--color-orange)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-orange-text)] transition hover:bg-[var(--color-orange)]/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={14} />
-              Save{publish ? " + publish" : ""}
+              {submitting ? "Saving…" : `Save${publish ? " + publish" : ""}`}
             </button>
           </div>
         }
       />
 
-      <div className="flex items-center gap-3 rounded-xl border border-[var(--color-orange)]/40 bg-[var(--color-orange)]/10 px-5 py-3.5 text-sm">
-        <Info size={16} className="shrink-0 text-[var(--color-orange)]" />
-        <div className="flex-1">
-          <p className="font-semibold text-[var(--color-orange-text)]">Authoring custom strategies — coming soon</p>
-          <p className="mt-0.5 text-[12px] text-foreground/60">
-            The sandboxed editor is preview-only. Save / publish endpoints land with the next user-server release.
-          </p>
+      {submitErr && (
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--color-red)]/40 bg-[var(--color-red)]/10 px-5 py-3.5 text-sm text-[var(--color-red-light)]">
+          <AlertTriangle size={16} className="shrink-0" />
+          <span>{submitErr}</span>
         </div>
-      </div>
-
-      <PendingHub what="POST /u/strategies proxied to user-server; publish_to_marketplace triggers a follow-up POST /marketplace." />
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
         {/* ── Editor column ───────────────────────────────────────── */}

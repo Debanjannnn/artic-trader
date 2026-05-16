@@ -26,7 +26,7 @@ interface FeatureCardProps {
 
 export function FeatureCard({ icon, color, title, description, hoverBg, visualGradient }: FeatureCardProps) {
   return (
-    <div className="group h-full rounded-[20px] border border-white/[0.06] bg-white/[0.02] hover-lift hover:border-white/[0.1] overflow-hidden flex flex-col">
+    <div className="group h-full rounded-[20px] border border-foreground/[0.06] bg-white/[0.02] hover-lift hover:border-foreground/[0.1] overflow-hidden flex flex-col">
       {/* Visual header area */}
       <div className={cn(
         "relative aspect-[16/9] sm:aspect-[4/3] flex items-center justify-center overflow-hidden transition-colors duration-300",
@@ -58,8 +58,8 @@ export function FeatureCard({ icon, color, title, description, hoverBg, visualGr
 
       {/* Text content */}
       <div className="p-7 pt-5">
-        <h3 className="text-base font-semibold text-white mb-2.5">{title}</h3>
-        <p className="text-sm text-white/50 leading-relaxed">{description}</p>
+        <h3 className="text-base font-semibold text-foreground mb-2.5">{title}</h3>
+        <p className="text-sm text-foreground/50 leading-relaxed">{description}</p>
       </div>
     </div>
   );

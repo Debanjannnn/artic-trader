@@ -1,28 +1,17 @@
 "use client"
 
 /**
- * Hub auth handshake using InterwovenKit as the canonical signer.
+ * Hub auth via EIP-4361 (SIWE) on 0G mainnet.
  *
  * Flow:
- *   1. user connects via InterwovenKit (kit.openConnect)
- *   2. we fetch a nonce from hub keyed on kit.address
- *   3. we ask kit.offlineSigner.signAmino(address, adr36SignDoc) to sign the
- *      ADR-36 doc — produces a Cosmos-compatible signature + pubkey
- *   4. we POST {pubkey, signature, ...} to /auth/verify
- *
- * Legacy localStorage secp256k1 path is preserved as a dev fallback so the
- * /auth/test/v1 harness keeps working when InterwovenKit isn't mounted.
+ *   1. user connects an injected EVM wallet (MetaMask etc.) via useWallet()
+ *   2. fetch nonce from hub keyed on the wallet address
+ *   3. personal_sign the hub's canonical sign-in message
+ *   4. POST signature to /auth/verify → JWT
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { secp256k1 } from "@noble/curves/secp256k1.js"
-import { sha256 } from "@noble/hashes/sha2.js"
-import { ripemd160 } from "@noble/hashes/legacy.js"
-import { bech32 } from "bech32"
-import { useInterwovenKit } from "@initia/interwovenkit-react"
 import {
-  b64encode,
-  buildAdr36SignDoc,
   buildSigninMessage,
   clearJwt,
   fetchNonce,
@@ -34,61 +23,37 @@ import {
   verifySignature,
   type StoredJwt,
 } from "@/lib/hub-auth"
+import { useWallet } from "@/hooks/use-wallet"
 
 const HUB_URL =
   (process.env.NEXT_PUBLIC_HUB_URL as string | undefined) || "http://localhost:9000"
 const CHAIN =
-  (process.env.NEXT_PUBLIC_HUB_AUTH_CHAIN as string | undefined) || "initia-testnet"
-const HRP = (process.env.NEXT_PUBLIC_HUB_AUTH_HRP as string | undefined) || "init"
+  (process.env.NEXT_PUBLIC_HUB_AUTH_EVM_CHAIN as string | undefined) || "0g-mainnet"
 const SESSION_SCOPE = "authenticated-actions"
 const SESSION_TTL_SECONDS = 8 * 60 * 60
 
-const WALLET_KEY = "artic_hub_wallet_priv_hex"
-
 type Status = "idle" | "running" | "ok" | "error"
 
-type FallbackWallet = { priv: Uint8Array; pub: Uint8Array; address: string }
+interface Eip1193 {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+}
 
-function loadOrCreateFallbackWallet(): FallbackWallet {
-  let privHex: string | null = null
-  try {
-    privHex = localStorage.getItem(WALLET_KEY)
-  } catch {
-    /* private mode / disabled */
-  }
-  let priv: Uint8Array
-  if (privHex && /^[0-9a-f]{64}$/i.test(privHex)) {
-    priv = new Uint8Array(privHex.match(/.{2}/g)!.map((b) => parseInt(b, 16)))
-  } else {
-    priv = secp256k1.utils.randomSecretKey()
-    try {
-      localStorage.setItem(WALLET_KEY, hex(priv))
-    } catch {
-      /* ignore */
-    }
-  }
-  const pub = secp256k1.getPublicKey(priv, true)
-  const sha = sha256(pub)
-  const rip = ripemd160(sha)
-  const address = bech32.encode(HRP, bech32.toWords(rip))
-  return { priv, pub, address }
+function getInjected(): Eip1193 | null {
+  if (typeof window === "undefined") return null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const w = window as any
+  return (w.ethereum as Eip1193 | undefined) ?? null
 }
 
 export function useHubAuth() {
-  const kit = useInterwovenKit()
-  const [fallback, setFallback] = useState<FallbackWallet | null>(null)
+  const { address: walletAddress, isConnected, openConnect } = useWallet()
   const [token, setToken] = useState<StoredJwt | null>(null)
   const [status, setStatus] = useState<Status>("idle")
   const [error, setError] = useState<string | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const inFlight = useRef(false)
 
-  const activeAddress = kit.isConnected ? kit.address ?? null : fallback?.address ?? null
-
-  // Hydrate fallback wallet + cached JWT on first client render.
   useEffect(() => {
-    const w = loadOrCreateFallbackWallet()
-    setFallback(w)
     const cached = loadJwt()
     if (cached && cached.exp > Date.now()) {
       setToken(cached)
@@ -99,19 +64,27 @@ export function useHubAuth() {
 
   const run = useCallback(async () => {
     if (inFlight.current) return
-    if (!activeAddress) {
-      setError("no wallet connected")
+    const eth = getInjected()
+    if (!eth || !walletAddress) {
+      setError("connect a wallet first")
       setStatus("error")
       return
     }
     inFlight.current = true
     setStatus("running")
     setError(null)
-
     try {
-      const address = activeAddress
+      // Re-request accounts: MetaMask invalidates dapp permission across
+      // network switches / page reloads. Without this, personal_sign throws
+      // "method and/or account has not been authorized by the user".
+      const accounts = (await eth.request({
+        method: "eth_requestAccounts",
+      })) as string[]
+      if (!accounts?.length) {
+        throw new Error("no wallet account available")
+      }
+      const address = accounts[0]
       const nonce = await fetchNonce(HUB_URL, address, CHAIN)
-
       const session = newSessionKeypair()
       const session_expires_at_iso = new Date(
         Date.now() + SESSION_TTL_SECONDS * 1000,
@@ -127,35 +100,23 @@ export function useHubAuth() {
         session_expires_at_iso,
       })
 
-      const signDoc = buildAdr36SignDoc(address, message)
-
-      let pubkey_b64: string
-      let signature_b64: string
-
-      if (kit.isConnected && kit.offlineSigner) {
-        // Canonical path — InterwovenKit signs the ADR-36 doc on Initia.
-        const signed = await kit.offlineSigner.signAmino(address, signDoc as never)
-        pubkey_b64 = signed.signature.pub_key.value
-        signature_b64 = signed.signature.signature
-      } else if (fallback) {
-        // Dev/test fallback — sign with localStorage secp256k1 wallet.
-        const canonical = canonicalize(signDoc)
-        const bytes = new TextEncoder().encode(canonical)
-        const digest = sha256(bytes)
-        const sig = secp256k1.sign(digest, fallback.priv)
-        pubkey_b64 = b64encode(fallback.pub)
-        signature_b64 = b64encode(sig)
-      } else {
-        throw new Error("no signer available")
-      }
+      const msgHex =
+        "0x" +
+        Array.from(new TextEncoder().encode(message))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("")
+      const sig = (await eth.request({
+        method: "personal_sign",
+        params: [msgHex, address],
+      })) as string
 
       const verify = await verifySignature({
         hubUrl: HUB_URL,
         address,
         chain: CHAIN,
         nonce: nonce.nonce,
-        pubkey_b64,
-        signature_b64,
+        pubkey_b64: "",
+        signature_b64: sig,
         session_pub_b64: session.pub_b64,
         session_scope: SESSION_SCOPE,
         session_expires_at_iso,
@@ -178,7 +139,7 @@ export function useHubAuth() {
     } finally {
       inFlight.current = false
     }
-  }, [activeAddress, kit, fallback])
+  }, [walletAddress])
 
   const signOut = useCallback(() => {
     clearJwt()
@@ -193,23 +154,9 @@ export function useHubAuth() {
     hydrated,
     run,
     signOut,
-    address: activeAddress,
-    isInterwovenConnected: kit.isConnected,
-    initUsername: token?.init_username ?? kit.username ?? null,
+    openConnect,
+    address: walletAddress,
+    isWalletConnected: isConnected,
+    initUsername: token?.init_username ?? null,
   }
-}
-
-// Recursively sort object keys, emit with separators=(",", ":") to match
-// Python's json.dumps(sort_keys=True). Arrays are not reordered.
-function canonicalize(v: unknown): string {
-  if (v === null || typeof v !== "object") return JSON.stringify(v)
-  if (Array.isArray(v)) return "[" + v.map(canonicalize).join(",") + "]"
-  const keys = Object.keys(v as Record<string, unknown>).sort()
-  return (
-    "{" +
-    keys
-      .map((k) => JSON.stringify(k) + ":" + canonicalize((v as Record<string, unknown>)[k]))
-      .join(",") +
-    "}"
-  )
 }

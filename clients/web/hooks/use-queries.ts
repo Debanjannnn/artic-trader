@@ -15,7 +15,10 @@ export const qk = {
   trades: (agentId?: string) => ["trades", agentId ?? "all"] as const,
   logs: (agentId: string) => ["logs", agentId] as const,
   strategies: () => ["strategies"] as const,
-  marketplace: (sort: MarketplaceSort) => ["marketplace", sort] as const,
+  strategy: (id: string) => ["strategies", id] as const,
+  strategyStats: (hash: string) => ["strategies", "stats", hash] as const,
+  marketplace: (sort: MarketplaceSort, limit: number, offset: number) =>
+    ["marketplace", sort, limit, offset] as const,
   marketplaceItem: (id: string) => ["marketplace", "item", id] as const,
   credits: () => ["credits"] as const,
   ledger: () => ["ledger"] as const,
@@ -61,10 +64,14 @@ export const useStrategies = () =>
     staleTime: LONG,
   })
 
-export const useMarketplace = (sort: MarketplaceSort) =>
+export const useMarketplace = (
+  sort: MarketplaceSort,
+  limit = 50,
+  offset = 0,
+) =>
   useQuery({
-    queryKey: qk.marketplace(sort),
-    queryFn: () => api.listMarketplace(sort),
+    queryKey: qk.marketplace(sort, limit, offset),
+    queryFn: () => api.listMarketplace(sort, limit, offset),
     staleTime: LONG,
   })
 
@@ -74,6 +81,22 @@ export const useMarketplaceItem = (id: string) =>
     queryFn: () => api.getMarketplaceItem(id),
     staleTime: LONG,
     enabled: !!id,
+  })
+
+export const useStrategy = (id: string) =>
+  useQuery({
+    queryKey: qk.strategy(id),
+    queryFn: () => api.getStrategy(id),
+    staleTime: LONG,
+    enabled: !!id,
+  })
+
+export const useStrategyStats = (hash: string | null | undefined) =>
+  useQuery({
+    queryKey: qk.strategyStats(hash ?? ""),
+    queryFn: () => api.getStrategyStats(hash as string),
+    staleTime: SHORT,
+    enabled: !!hash,
   })
 
 export const useCredits = () =>
@@ -182,3 +205,78 @@ export const useSecretKeys = () =>
     queryFn: api.listSecretKeys,
     staleTime: LONG,
   })
+
+// ── Strategies + marketplace mutations ─────────────────────────────────────
+
+export const useCreateStrategy = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: {
+      name: string
+      code: string
+      params_schema?: Record<string, unknown>
+    }) => api.createStrategy(body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.strategies() }),
+  })
+}
+
+export const usePatchStrategy = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: string
+      body: { name?: string; code?: string; params_schema?: Record<string, unknown> }
+    }) => api.patchStrategy(id, body),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: qk.strategies() })
+      qc.invalidateQueries({ queryKey: qk.strategy(vars.id) })
+    },
+  })
+}
+
+export const useDeleteStrategy = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.deleteStrategy(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.strategies() }),
+  })
+}
+
+export const useInstallStrategy = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (marketplaceId: string) => api.installStrategy(marketplaceId),
+    onSuccess: (_, marketplaceId) => {
+      qc.invalidateQueries({ queryKey: qk.strategies() })
+      // Optimistic install count bump.
+      qc.invalidateQueries({ queryKey: ["marketplace"] })
+      qc.invalidateQueries({ queryKey: qk.marketplaceItem(marketplaceId) })
+    },
+  })
+}
+
+export const usePublishStrategy = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.publishStrategy(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["marketplace"] })
+      qc.invalidateQueries({ queryKey: qk.strategies() })
+    },
+  })
+}
+
+export const useReportStrategy = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      api.reportMarketplaceItem(id, reason),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["marketplace"] })
+      qc.invalidateQueries({ queryKey: qk.marketplaceItem(vars.id) })
+    },
+  })
+}

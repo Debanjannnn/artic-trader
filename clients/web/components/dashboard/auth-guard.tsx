@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { useHubAuth } from "@/hooks/use-hub-auth"
 
 /**
- * Redirect to /connect when there's no hub-auth JWT. InterwovenKit wallet is
- * optional; the actual gate is the JWT in localStorage.
+ * Redirect to /connect when there's no hub-auth JWT. Wallet connection is
+ * optional after sign-in; the actual gate is the JWT in localStorage.
  */
 export function AuthGuard({ children }: PropsWithChildren) {
   const router = useRouter()

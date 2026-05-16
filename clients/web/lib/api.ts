@@ -16,8 +16,6 @@ import {
   demoCreditBalance,
   demoIndexer,
   demoLedger,
-  demoLogs,
-  demoMarketplace,
   demoSessionKeys,
 } from "./demo-data"
 import { signedFetch } from "./signed-fetch"
@@ -238,15 +236,26 @@ export async function listTrades(agentId?: string): Promise<Trade[]> {
   }
 }
 
-// ── Strategies (WIRED) ─────────────────────────────────────────────────────
+// ── Strategies (WIRED — hub /strategies) ───────────────────────────────────
 
-interface BackendStrategy {
+export interface BackendStrategy {
   id: string
   name: string
   source: "builtin" | "marketplace" | "authored"
-  code_blob?: string | null
+  code_hash?: string | null
   marketplace_id?: string | null
+  params_schema?: Record<string, unknown> | null
   created_at?: string
+}
+
+export interface StrategyStats {
+  strategy_hash: string
+  n_trades: number
+  n_wins: number
+  win_rate: number
+  avg_pnl_bps: number | null
+  total_pnl_usdt: number
+  last_trade_at: string | null
 }
 
 function toClientStrategy(b: BackendStrategy): Strategy {
@@ -259,16 +268,68 @@ function toClientStrategy(b: BackendStrategy): Strategy {
   }
 }
 
+/** Internal: raw strategies list. Keep so per-strategy hooks can read code_hash. */
+export async function listStrategiesRaw(): Promise<BackendStrategy[]> {
+  return signedFetch<BackendStrategy[]>("/api/v1/u/strategies")
+}
+
 export async function listStrategies(): Promise<{
   installed: Strategy[]
   authored: Strategy[]
+  raw: BackendStrategy[]
 }> {
-  const rows = await signedFetch<BackendStrategy[]>("/api/v1/u/strategies")
+  const rows = await listStrategiesRaw()
   const mapped = rows.map(toClientStrategy)
   return {
     installed: mapped.filter((s) => s.source !== "authored"),
     authored: mapped.filter((s) => s.source === "authored"),
+    raw: rows,
   }
+}
+
+export async function getStrategy(id: string): Promise<BackendStrategy> {
+  return signedFetch<BackendStrategy>(`/api/v1/u/strategies/${id}`)
+}
+
+export async function createStrategy(body: {
+  name: string
+  code: string
+  params_schema?: Record<string, unknown>
+}): Promise<BackendStrategy> {
+  return signedFetch<BackendStrategy>("/api/v1/u/strategies", { method: "POST", body })
+}
+
+export async function patchStrategy(
+  id: string,
+  body: { name?: string; code?: string; params_schema?: Record<string, unknown> },
+): Promise<BackendStrategy> {
+  return signedFetch<BackendStrategy>(`/api/v1/u/strategies/${id}`, {
+    method: "PATCH",
+    body,
+  })
+}
+
+export async function deleteStrategy(id: string): Promise<void> {
+  await signedFetch<void>(`/api/v1/u/strategies/${id}`, { method: "DELETE" })
+}
+
+export async function installStrategy(marketplaceId: string): Promise<BackendStrategy> {
+  return signedFetch<BackendStrategy>(`/api/v1/u/strategies/${marketplaceId}/install`, {
+    method: "POST",
+  })
+}
+
+export async function publishStrategy(
+  id: string,
+): Promise<{ marketplace_id: string; status: string }> {
+  return signedFetch<{ marketplace_id: string; status: string }>(
+    `/api/v1/u/strategies/${id}/publish`,
+    { method: "POST" },
+  )
+}
+
+export async function getStrategyStats(strategyHash: string): Promise<StrategyStats> {
+  return signedFetch<StrategyStats>(`/api/v1/u/strategies/${strategyHash}/stats`)
 }
 
 // ── Secrets (WIRED — hub-local, not proxied) ───────────────────────────────
@@ -356,22 +417,67 @@ export async function listLedger(): Promise<LedgerRow[]> {
   return demoLedger as unknown as LedgerRow[]
 }
 
-// ── Marketplace (DEMO — hub/marketplace/ module is empty) ─────────────────
+// ── Marketplace (WIRED — hub /marketplace) ─────────────────────────────────
+
+export interface BackendMarketplaceItem {
+  id: string
+  name: string
+  author_user_id: string
+  code_hash: string
+  description: string | null
+  installs_count: number
+  reports_count: number
+  published_at: string
+}
+
+const SORT_MAP: Record<MarketplaceSort, "installed" | "newest" | "reported"> = {
+  installs: "installed",
+  recent: "newest",
+  reports: "reported",
+}
+
+function toClientMarketplace(b: BackendMarketplaceItem): MarketplaceItem {
+  return {
+    id: b.id,
+    name: b.name,
+    description: b.description ?? "",
+    author: b.author_user_id.slice(0, 12),
+    installs: b.installs_count,
+    reports: b.reports_count,
+    created_at: b.published_at,
+    code_preview: "",
+  }
+}
 
 export async function listMarketplace(
   sort: MarketplaceSort = "installs",
+  limit = 50,
+  offset = 0,
 ): Promise<MarketplaceItem[]> {
-  await latency()
-  const copy = [...demoMarketplace]
-  if (sort === "installs") copy.sort((a, b) => b.installs - a.installs)
-  if (sort === "reports") copy.sort((a, b) => b.reports - a.reports)
-  if (sort === "recent") copy.sort((a, b) => b.created_at.localeCompare(a.created_at))
-  return copy as unknown as MarketplaceItem[]
+  const rows = await signedFetch<BackendMarketplaceItem[]>(
+    `/marketplace?sort=${SORT_MAP[sort]}&limit=${limit}&offset=${offset}`,
+  )
+  return rows.map(toClientMarketplace)
 }
 
 export async function getMarketplaceItem(id: string): Promise<MarketplaceItem | null> {
-  await latency()
-  return (demoMarketplace.find((m) => m.id === id) as unknown as MarketplaceItem | null) ?? null
+  try {
+    const row = await signedFetch<BackendMarketplaceItem>(`/marketplace/${id}`)
+    return toClientMarketplace(row)
+  } catch (e: unknown) {
+    if ((e as { status?: number })?.status === 404) return null
+    throw e
+  }
+}
+
+export async function reportMarketplaceItem(
+  id: string,
+  reason: string,
+): Promise<{ ok: boolean; reports_count: number }> {
+  return signedFetch<{ ok: boolean; reports_count: number }>(
+    `/marketplace/${id}/report`,
+    { method: "POST", body: { reason } },
+  )
 }
 
 // ── Sessions + API keys (DEMO) ────────────────────────────────────────────

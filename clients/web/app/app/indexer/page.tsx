@@ -97,7 +97,7 @@ export default function IndexerPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[var(--color-surface-sunken)]/50 text-left text-[11px] uppercase tracking-wider text-foreground/55">
+              <tr className="bg-white/3 text-left text-[11px] uppercase tracking-wider text-foreground/55">
                 <th className="px-5 py-3 font-medium">tx_hash</th>
                 <th className="px-5 py-3 font-medium">kind</th>
                 <th className="px-5 py-3 font-medium">amount</th>
@@ -213,7 +213,7 @@ function CopyTx({ tx }: { tx: string }) {
 }
 
 const inputCls =
-  "w-full rounded-md bg-[var(--color-surface-sunken)] px-3 py-2 text-sm text-foreground placeholder:text-foreground/30 ring-1 ring-inset ring-[rgba(194,203,212,0.10)] focus:outline-none focus:ring-[var(--color-accent-warm)]/55 focus:ring-2"
+  "w-full rounded-md bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-foreground/30 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-[var(--color-accent-warm)]/55 focus:ring-2"
 
 function Filter({
   label,

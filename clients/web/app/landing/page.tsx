@@ -1,53 +1,54 @@
+"use client";
+
 import { Navbar } from "@/components/newlanding/navbar";
-import { Hero } from "@/components/newlanding/hero";
-import { Ticker } from "@/components/newlanding/ticker";
-import { FeaturesGrid } from "@/components/newlanding/features-grid";
-import { HowItWorks } from "@/components/newlanding/how-it-works";
-import { ClientsSection } from "@/components/newlanding/clients-section";
+import { HeroArctic } from "@/components/newlanding/hero-arctic";
+import { FeaturesBento } from "@/components/newlanding/features-bento";
+import { StrategyCatalog } from "@/components/newlanding/strategy-catalog";
+import { HowItWorksSection } from "@/components/newlanding/how-it-works-single";
+import { LlmMatrix } from "@/components/newlanding/llm-matrix";
+import { OnchainProof } from "@/components/newlanding/onchain-proof";
+import { LivePnlFeed } from "@/components/newlanding/live-pnl-feed";
+import { Faq } from "@/components/newlanding/faq";
+import { Waitlist } from "@/components/newlanding/waitlist";
 import { CtaBanner } from "@/components/newlanding/cta-banner";
 import { Footer } from "@/components/newlanding/footer";
-import { FeatureTransition } from "@/components/newlanding/feature-transition";
-import { ButtonLab } from "@/components/newlanding/button-lab";
-import { FadeIn } from "@/components/shared/fade-in";
+import { LandingSnapContainer } from "@/components/newlanding/landing-snap-container";
+import { LandingThemeProvider, useLandingTheme } from "@/components/newlanding/theme-context";
 
-const INK = "#0E141A";
+function LandingShell() {
+  const ctx = useLandingTheme();
+  const isLight = ctx?.theme === "light";
 
-export default function Home() {
   return (
-    <>
-      <Navbar />
-      <main>
-        <Hero />
-        <Ticker />
-        {/* <FeatureTransition /> */}
-        <FeaturesGrid />
-        <FadeIn>
-          <HowItWorks />
-        </FadeIn>
-        <FadeIn>
-          <ClientsSection />
-        </FadeIn>
-        <FadeIn>
-          <ButtonLab />
-        </FadeIn>
-        <FadeIn>
-          <CtaBanner />
-        </FadeIn>
-      </main>
-      <Footer />
-      {/* Giant wordmark */}
-      {/* <div className="max-w-screen relative overflow-hidden bg-[#CCD2D6] h-80">
-        <h3
-          aria-hidden
-          className="font-bold tracking-tighter leading-[0.85] select-none whitespace-nowrap text-center bg-clip-text text-transparent"
-          style={{
-            fontSize: "clamp(196px, 44vw, 620px)",
-            backgroundImage: `linear-gradient(180deg, rgba(14,20,26,0.05) 0%, ${INK} 100%)`,
-          }}
-        >
-          ARTIC
-        </h3>
-      </div> */}
-    </>
+    <div className={isLight ? "landing-light" : ""}>
+      <div className="bg-background text-foreground">
+        <Navbar />
+        <LandingSnapContainer
+          top={[<HeroArctic key="hero" />]}
+          middle={[
+            <FeaturesBento key="bento" />,
+            <StrategyCatalog key="strat" />,
+            <HowItWorksSection key="hiw" />,
+            <LlmMatrix key="llm" />,
+            <OnchainProof key="oc" />,
+            <LivePnlFeed key="pnl" />,
+          ]}
+          bottom={[
+            <Faq key="faq" />,
+            <Waitlist key="wait" />,
+            <CtaBanner key="cta" />,
+            <Footer key="foot" />,
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <LandingThemeProvider>
+      <LandingShell />
+    </LandingThemeProvider>
   );
 }

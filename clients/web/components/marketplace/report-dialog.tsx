@@ -16,11 +16,15 @@ export function ReportDialog({
   strategyName,
   onClose,
   onSubmit,
+  submitting = false,
+  error = null,
 }: {
   open: boolean
   strategyName: string
   onClose: () => void
-  onSubmit?: (reason: string) => void
+  onSubmit?: (reason: string) => void | Promise<void>
+  submitting?: boolean
+  error?: string | null
 }) {
   const [reason, setReason] = useState("")
   const [submitted, setSubmitted] = useState(false)
@@ -99,6 +103,9 @@ export function ReportDialog({
                 {trimmed.length}/{MAX_REASON_LEN}
               </span>
             </div>
+            {error && (
+              <p className="mt-2 text-[11px] text-[var(--color-red-light)]">{error}</p>
+            )}
             <div className="mt-5 flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
@@ -107,20 +114,20 @@ export function ReportDialog({
                 Cancel
               </button>
               <button
-                disabled
-                title={
-                  !ok
-                    ? "Give at least 10 characters of context"
-                    : "Hub auth wiring pending"
-                }
-                onClick={() => {
+                disabled={!ok || submitting}
+                title={!ok ? "Give at least 10 characters of context" : undefined}
+                onClick={async () => {
                   if (!ok) return
-                  onSubmit?.(trimmed)
-                  setSubmitted(true)
+                  try {
+                    await onSubmit?.(trimmed)
+                    setSubmitted(true)
+                  } catch {
+                    // surfaced via error prop
+                  }
                 }}
-                className="inline-flex cursor-not-allowed items-center gap-2 rounded-md border border-[var(--color-red)]/40 bg-[var(--color-red)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-red-light)] opacity-60"
+                className="inline-flex items-center gap-2 rounded-md border border-[var(--color-red)]/40 bg-[var(--color-red)]/10 px-4 py-2 text-sm font-semibold text-[var(--color-red-light)] transition hover:bg-[var(--color-red)]/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <Flag size={14} /> Submit report
+                <Flag size={14} /> {submitting ? "Submitting…" : "Submit report"}
               </button>
             </div>
           </>

@@ -30,15 +30,17 @@ class AppSettings(BaseSettings):
     # Optional MongoDB cache
     MONGODB_URI: str = ""
 
-    # On-chain (Initia rollup; CHAIN_*/HSK_* kept as fallback aliases)
-    INITIA_RPC_URL: str = ""
-    INITIA_PRIVATE_KEY: str = ""
-    INITIA_CHAIN_ID: str = ""
-    INITIA_EXPLORER_BASE: str = "https://scan.testnet.initia.xyz"
-    CHAIN_RPC_URL: str = ""
-    CHAIN_PRIVATE_KEY: str = ""
-    HSK_RPC_URL: str = ""
-    HSK_PRIVATE_KEY: str = ""
+    # On-chain (0G Mainnet)
+    ZERO_G_RPC_URL: str = "https://evmrpc.0g.ai"
+    ZERO_G_PRIVATE_KEY: str = ""
+    ZERO_G_CHAIN_ID: str = "16661"
+    ZERO_G_EXPLORER_BASE: str = "https://chainscan.0g.ai"
+    ZERO_G_COMPUTE_SECRET: str = ""
+    ZERO_G_COMPUTE_PROVIDER: str = ""
+    ZERO_G_COMPUTE_SERVING_BROKER: str = ""
+    # 0G Storage (Log Layer) — full LLM reasoning + trade detail JSON live here;
+    # only the content root hash lands on-chain.
+    ZERO_G_STORAGE_INDEXER_URL: str = "https://indexer-storage-turbo.0g.ai"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

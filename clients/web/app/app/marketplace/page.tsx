@@ -2,13 +2,14 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Store, Upload, Flag } from "lucide-react"
+import { Download, Flag, Store } from "lucide-react"
 import { PageHeader } from "@/components/dashboard/empty-state"
-import { PendingHub } from "@/components/dashboard/pending-hub"
-import { DemoBadge } from "@/components/dashboard/demo-badge"
 import { Skeleton } from "@/components/dashboard/skeleton"
-import { useMarketplace } from "@/hooks/use-queries"
-import type { MarketplaceSort } from "@/lib/schemas"
+import {
+  useInstallStrategy,
+  useMarketplace,
+} from "@/hooks/use-queries"
+import type { MarketplaceItem, MarketplaceSort } from "@/lib/schemas"
 
 const SORTS: { key: MarketplaceSort; label: string }[] = [
   { key: "installs", label: "Most installed" },
@@ -18,29 +19,23 @@ const SORTS: { key: MarketplaceSort; label: string }[] = [
 
 export default function MarketplacePage() {
   const [sort, setSort] = useState<MarketplaceSort>("installs")
-  const { data: sorted = [], isLoading } = useMarketplace(sort)
+  const { data: sorted = [], isLoading, error } = useMarketplace(sort)
 
   return (
     <div className="space-y-10">
       <PageHeader
         title="Strategy marketplace"
         subtitle="Browse, install, and publish Python strategies. All code runs in RestrictedPython."
-        action={
-          <button
-            disabled
-            title="Hub auth wiring pending"
-            className="btn-disabled inline-flex items-center gap-2 rounded-md bg-white/[0.04] px-4 py-2 text-sm text-foreground/55"
-          >
-            <Upload size={14} /> Publish
-          </button>
-        }
       />
 
-      <PendingHub what="Listings come from the hub marketplace tables." />
+      {error && (
+        <div className="rounded-md border border-[var(--color-red)]/30 bg-[var(--color-red)]/10 p-3 text-xs text-[var(--color-red-light)]">
+          {(error as Error).message}
+        </div>
+      )}
 
       <div className="flex items-center gap-2 text-xs text-foreground/55">
-        <DemoBadge />
-        <span>{sorted.length} demo listings</span>
+        <span>{sorted.length} listings</span>
       </div>
 
       <div className="flex items-center gap-1 border-b border-[rgba(194,203,212,0.08)]">
@@ -68,39 +63,14 @@ export default function MarketplacePage() {
             <Skeleton key={i} height={180} />
           ))}
         </div>
+      ) : sorted.length === 0 ? (
+        <div className="surface flex flex-col items-center justify-center p-14 text-center text-sm text-foreground/55">
+          No published strategies yet.
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sorted.map((s) => (
-            <Link
-              key={s.id}
-              href={`/app/marketplace/${s.id}`}
-              className="hover-lift surface group flex h-full flex-col justify-between p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-warm)]/60"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-mono text-sm font-semibold tracking-tight text-foreground">
-                      {s.name}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-foreground/50">
-                      by {s.author}
-                    </p>
-                  </div>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-warm-soft)] text-[var(--color-accent-warm)] opacity-60 transition group-hover:opacity-100">
-                    <Store size={14} />
-                  </span>
-                </div>
-                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-foreground/65">
-                  {s.description}
-                </p>
-              </div>
-              <div className="mt-5 flex items-center justify-between pt-3 text-[11px]">
-                <span className="num-tabular text-foreground/50">
-                  {s.installs.toLocaleString()} installs
-                </span>
-                <ReportBadge reports={s.reports} />
-              </div>
-            </Link>
+          {sorted.map((item) => (
+            <MarketplaceCard key={item.id} item={item} />
           ))}
         </div>
       )}
@@ -113,11 +83,68 @@ export default function MarketplacePage() {
         <div>
           <p className="font-semibold text-foreground/85">Reporting</p>
           <p className="mt-1 leading-relaxed">
-            Any user can flag a strategy. 3+ reports in 7 days auto-hides it
-            pending admin review.
+            Any user can flag a strategy. 3+ reports auto-hides it pending admin review.
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+function MarketplaceCard({ item }: { item: MarketplaceItem }) {
+  const install = useInstallStrategy()
+  const [installed, setInstalled] = useState(false)
+  const onInstall = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    install.mutate(item.id, {
+      onSuccess: () => setInstalled(true),
+    })
+  }
+  return (
+    <div className="hover-lift surface group flex h-full flex-col justify-between p-5">
+      <Link
+        href={`/app/marketplace/${item.id}`}
+        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-warm)]/60"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate font-mono text-sm font-semibold tracking-tight text-foreground">
+              {item.name}
+            </p>
+            <p className="mt-0.5 text-[11px] text-foreground/50">
+              by {item.author}
+            </p>
+          </div>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-warm-soft)] text-[var(--color-accent-warm)] opacity-60 transition group-hover:opacity-100">
+            <Store size={14} />
+          </span>
+        </div>
+        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-foreground/65">
+          {item.description || "—"}
+        </p>
+      </Link>
+      <div className="mt-5 flex items-center justify-between gap-2 pt-3 text-[11px]">
+        <div className="flex items-center gap-2">
+          <span className="num-tabular text-foreground/50">
+            {item.installs.toLocaleString()} installs
+          </span>
+          <ReportBadge reports={item.reports} />
+        </div>
+        <button
+          onClick={onInstall}
+          disabled={install.isPending || installed}
+          className="focus-ring inline-flex items-center gap-1 rounded-md bg-[var(--color-accent-warm-soft)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-accent-warm)] transition hover:bg-[var(--color-accent-warm)]/18 disabled:opacity-50"
+        >
+          <Download size={12} />
+          {installed ? "Installed" : install.isPending ? "Installing…" : "Install"}
+        </button>
+      </div>
+      {install.error && (
+        <p className="mt-2 text-[11px] text-[var(--color-red-light)]">
+          {(install.error as Error).message}
+        </p>
+      )}
     </div>
   )
 }

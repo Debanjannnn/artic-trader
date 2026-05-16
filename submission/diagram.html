@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Artic Architecture</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,system-ui,sans-serif;background:#0A0A0F;color:#F0F0F2;width:1280px;height:720px;overflow:hidden;padding:32px 40px;display:flex;flex-direction:column}
+  h1{margin:0 0 4px;font-size:26px;font-weight:600;letter-spacing:-0.01em}
+  h1 span{color:#DA7756}
+  .sub{color:#9090A0;font-size:13px;margin-bottom:18px;letter-spacing:0.02em}
+  .grid{flex:1;display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:20px;align-items:stretch}
+  .col{display:flex;flex-direction:column;gap:14px}
+  .box{background:linear-gradient(180deg,#15151D 0%,#10101A 100%);border:1px solid #2A2A3A;border-radius:12px;padding:14px 16px;position:relative}
+  .box.center{background:linear-gradient(180deg,#1A1626 0%,#100C18 100%);border-color:#3A2A4A}
+  .box.zerog{border-color:#DA7756;background:linear-gradient(180deg,#1F1612 0%,#150C08 100%)}
+  .tag{font-size:9px;font-weight:600;letter-spacing:0.12em;color:#DA7756;text-transform:uppercase;margin-bottom:6px}
+  .title{font-size:15px;font-weight:600;color:#F0F0F2;margin-bottom:8px}
+  .body{font-size:11.5px;line-height:1.5;color:#A8A8B8}
+  .body li{margin:3px 0;list-style:none;padding-left:12px;position:relative}
+  .body li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:1.5px;background:#DA7756;border-radius:1px}
+  .pill{display:inline-block;background:#2A2030;color:#E8A080;font-size:9.5px;padding:2px 7px;border-radius:8px;margin-right:4px;margin-top:3px;font-weight:500;border:1px solid #3A2A40}
+  .pill.green{color:#5DCAA5;background:#102018;border-color:#1A3A28}
+  .pill.blue{color:#85B7EB;background:#0C1828;border-color:#1F3854}
+  .arrows{position:absolute;top:50%;left:-20px;width:20px;height:2px;background:#3A2A4A;transform:translateY(-50%)}
+  .arrows::after{content:"";position:absolute;right:0;top:-3px;border-left:7px solid #3A2A4A;border-top:4px solid transparent;border-bottom:4px solid transparent}
+  .legend{display:flex;gap:14px;font-size:10.5px;color:#7878A0;margin-top:14px;padding-top:12px;border-top:1px solid #1A1A26}
+  .legend-item{display:flex;align-items:center;gap:5px}
+  .legend-item .dot{width:8px;height:8px;border-radius:2px}
+  .ports{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#5D6080;letter-spacing:0.04em}
+</style>
+</head>
+<body>
+  <h1>Artic — <span>AI-Powered Multi-Agent Trading on 0G</span></h1>
+  <div class="sub">Verifiable autonomous DeFi · TEE-sealed inference · Tokenised strategies · Track 2 — Agentic Trading Arena</div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="box">
+        <div class="tag">USER LAYER</div>
+        <div class="title">Web Client</div>
+        <div class="body">
+          <li>Next.js 16 dashboard</li>
+          <li>MetaMask · EIP-4361 SIWE</li>
+          <li>Strategy marketplace</li>
+          <li>Live trade feed + explorer links</li>
+        </div>
+        <div style="margin-top:8px"><span class="pill">React</span><span class="pill">Turbopack</span></div>
+      </div>
+      <div class="box">
+        <div class="tag">TRADING SOURCES</div>
+        <div class="title">Market Data</div>
+        <div class="body">
+          <li>Pyth Hermes (live prices)</li>
+          <li>TwelveData (candles)</li>
+          <li>30+ quant strategies</li>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="box center">
+        <div class="tag" style="color:#A480DA">ORCHESTRATION</div>
+        <div class="title">Hub · FastAPI</div>
+        <div class="body">
+          <li>Auth · VM lifecycle · WebSocket fan-out</li>
+          <li>Wake-proxy <span class="ports">/api/v1/u/*</span></li>
+          <li>Marketplace publish → mint INFT</li>
+          <li>Install → authorizeUsage on-chain</li>
+        </div>
+      </div>
+      <div class="box center">
+        <div class="tag" style="color:#A480DA">PER-USER VM</div>
+        <div class="title">User-Server + Agent Container</div>
+        <div class="body">
+          <li>One agent per (user, symbol)</li>
+          <li>LLM strategy selection (every session)</li>
+          <li>Supervisor LLM (every 60s)</li>
+          <li>Paper + HashKey live execution</li>
+        </div>
+        <div style="margin-top:8px"><span class="pill green">Morph VMs</span><span class="pill green">FastAPI</span></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="box zerog">
+        <div class="tag">0G COMPUTE · TeeML</div>
+        <div class="title">Sealed Inference</div>
+        <div class="body">
+          <li>Open-weight LLM in TEE enclave</li>
+          <li>Provider-signed responses</li>
+          <li>TEE sig folded into reasoning hash</li>
+        </div>
+      </div>
+      <div class="box zerog">
+        <div class="tag">0G STORAGE</div>
+        <div class="title">Reasoning + Trade Detail</div>
+        <div class="body">
+          <li>Full LLM reasoning JSON</li>
+          <li>Node sidecar (@0glabs/0g-ts-sdk)</li>
+          <li>Only cid hash on-chain</li>
+        </div>
+      </div>
+      <div class="box zerog">
+        <div class="tag">0G CHAIN · Mainnet</div>
+        <div class="title">Verifiable On-Chain Log</div>
+        <div class="body">
+          <li>DecisionLogger · TradeLogger</li>
+          <li>StrategyINFT (ERC-7857)</li>
+          <li>Mint + authorizeUsage</li>
+        </div>
+        <div style="margin-top:8px"><span class="pill">chainId 16661</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="dot" style="background:#DA7756"></span>0G modules</div>
+    <div class="legend-item"><span class="dot" style="background:#A480DA"></span>Artic services</div>
+    <div class="legend-item"><span class="dot" style="background:#5DCAA5"></span>External infra</div>
+    <div class="legend-item" style="margin-left:auto;color:#5D6080">github.com/silonelabs/artic · chainscan-galileo.0g.ai</div>
+  </div>
+</body>
+</html>

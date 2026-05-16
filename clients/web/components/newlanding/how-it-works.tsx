@@ -50,7 +50,7 @@ export function HowItWorks() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
-        className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight text-white mb-14"
+        className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight text-foreground mb-14"
       >
         Configure. Deploy. Profit.
       </motion.h2>
@@ -60,7 +60,7 @@ export function HowItWorks() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
-        className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-sm overflow-hidden"
+        className="rounded-3xl border border-foreground/10 bg-white/[0.02] backdrop-blur-sm overflow-hidden"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
           {steps.map((step, i) => (
@@ -82,7 +82,7 @@ function StepCard({ step, index }: { step: Step; index: number }) {
       transition={{ duration: 0.5, delay: index * 0.12 }}
       className={cn(
         "relative flex flex-col p-8 md:p-10 min-h-[440px] md:min-h-[520px]",
-        hasImage && "bg-black/20"
+        hasImage && "bg-background/20"
       )}
     >
       {/* Image (middle card) */}
@@ -99,7 +99,7 @@ function StepCard({ step, index }: { step: Step; index: number }) {
       )}
 
       {/* Title — top */}
-      <h3 className="text-[clamp(24px,2.6vw,34px)] font-semibold tracking-tight text-white leading-[1.15] max-w-[18ch]">
+      <h3 className="text-[clamp(24px,2.6vw,34px)] font-semibold tracking-tight text-foreground leading-[1.15] max-w-[18ch]">
         {step.title}
       </h3>
 
@@ -107,12 +107,12 @@ function StepCard({ step, index }: { step: Step; index: number }) {
       <div className="flex-1" />
 
       {/* Label */}
-      <p className="text-[11px] tracking-[1.5px] uppercase text-white/50 font-semibold mb-3">
+      <p className="text-[11px] tracking-[1.5px] uppercase text-foreground/50 font-semibold mb-3">
         {step.label}
       </p>
 
       {/* Description */}
-      <p className="text-[14px] text-white/60 leading-relaxed max-w-[34ch]">
+      <p className="text-[14px] text-foreground/60 leading-relaxed max-w-[34ch]">
         {step.description}
       </p>
     </motion.div>

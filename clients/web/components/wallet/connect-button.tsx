@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Wallet, Zap, Copy, LogOut, ExternalLink, ChevronDown } from "lucide-react"
+import { Wallet, Copy, LogOut, ChevronDown } from "lucide-react"
 import { useWallet } from "@/hooks/use-wallet"
-import { displayName, shortenAddr } from "@/lib/identity"
-import { CHAIN_ID } from "@/lib/chain"
+import { shortenAddr } from "@/lib/identity"
 
 export function ConnectButton() {
-  const { address, username, isConnected, openConnect, openWallet, disconnect, autoSign } = useWallet()
+  const { address, isConnected, openConnect, disconnect } = useWallet()
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -26,9 +25,6 @@ export function ConnectButton() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
-
-  const isAutoSignEnabled = !!autoSign?.isEnabledByChain?.[CHAIN_ID]
-  const label = displayName(address, username)
 
   if (!isConnected) {
     return (
@@ -49,8 +45,7 @@ export function ConnectButton() {
         className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-foreground transition hover:border-[var(--color-orange)]/40 hover:bg-white/[0.05]"
       >
         <span className="h-2 w-2 rounded-full bg-[var(--color-teal)]" aria-hidden />
-        <span className="font-mono">{label}</span>
-        {isAutoSignEnabled && <Zap size={12} className="text-yellow-400" />}
+        <span className="font-mono">{shortenAddr(address)}</span>
         <ChevronDown size={14} className={`opacity-60 transition ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -62,43 +57,18 @@ export function ConnectButton() {
                 <Wallet size={15} className="text-[var(--color-orange)]" />
               </div>
               <div className="min-w-0 flex-1">
-                {username ? (
-                  <>
-                    <p className="truncate text-sm font-semibold text-[var(--color-orange-text)]">{label}</p>
-                    <p className="mt-0.5 truncate font-mono text-xs text-foreground/40">
-                      {shortenAddr(address)}
-                    </p>
-                  </>
-                ) : (
-                  <p className="truncate font-mono text-sm text-foreground/70">{shortenAddr(address)}</p>
-                )}
+                <p className="truncate font-mono text-sm text-foreground/70">{shortenAddr(address)}</p>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-teal)]" />
-              <span className="text-[var(--color-teal)]">Connected</span>
-              {isAutoSignEnabled && (
-                <>
-                  <span className="text-foreground/20">·</span>
-                  <Zap size={10} className="text-yellow-400" />
-                  <span className="text-yellow-400/80">Auto-Sign</span>
-                </>
-              )}
+              <span className="text-[var(--color-teal)]">Connected · 0G mainnet</span>
             </div>
           </div>
 
           <div>
             <MenuItem onClick={copyAddress} icon={<Copy size={14} />}>
               {copied ? "Copied!" : "Copy address"}
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                openWallet()
-                setOpen(false)
-              }}
-              icon={<ExternalLink size={14} />}
-            >
-              Wallet manager
             </MenuItem>
             <MenuItem
               onClick={() => {

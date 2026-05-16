@@ -32,6 +32,8 @@ from .quant_algos import (
     funding_bias_stub,
     linear_regression_channel,
     kalman_fair_value,
+    smart_money,
+    meth_rwa,
 )
 
 
@@ -102,6 +104,8 @@ def compute_strategy_signal(
         return linear_regression_channel(prices, lookback=lookback)
     if strategy_lower == "kalman_fair_value":
         return kalman_fair_value(prices)
+    if strategy_lower == "meth_rwa":
+        return meth_rwa(prices)
 
     # Candle-based algos (need OHLC)
     if cdicts and len(cdicts) >= lookback:
@@ -125,6 +129,8 @@ def compute_strategy_signal(
             return vwap_deviation(cdicts)
         if strategy_lower == "obv_trend":
             return obv_trend(cdicts, lookback=lookback)
+        if strategy_lower == "smart_money":
+            return smart_money(cdicts)
 
     # Fallbacks that work with price_history only
     if strategy_lower == "trend_following":

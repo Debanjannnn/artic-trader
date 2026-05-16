@@ -135,7 +135,7 @@ export default function AgentsPage() {
       )}
 
       {/* ── PnL chart — sunken well ────────────────────────────────────── */}
-      <section className="surface-sunken p-5 md:p-7">
+      <section className="surface p-5 md:p-7">
         <header className="mb-5 flex items-baseline justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold tracking-tight text-foreground">
@@ -253,7 +253,7 @@ function AgentCard({
         <PnlChartCard agent={agent} trades={trades} height={160} minimal />
       </div>
 
-      <div className="flex items-center justify-between bg-[var(--color-surface-sunken)]/50 px-6 py-3 text-[11px] text-foreground/55">
+      <div className="flex items-center justify-between bg-white/3 px-6 py-3 text-[11px] text-foreground/55">
         <span className="inline-flex items-center gap-1.5">
           <SideDot side={agent.side} />
           <span className="capitalize">{agent.side}</span>

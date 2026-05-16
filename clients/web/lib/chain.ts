@@ -1,25 +1,41 @@
-export const CHAIN_ID = "initiation-2"
-export const RPC_URL = "https://rpc.testnet.initia.xyz"
-export const LCD_URL = "https://rest.testnet.initia.xyz"
-export const AUTH_CHAIN_NAME = "initia-testnet"
-
-// Rollup chain ID (your own appchain). Override via NEXT_PUBLIC_INITIA_ROLLUP_CHAIN_ID
-// once `weave init` returns the chosen ID.
-export const ROLLUP_CHAIN_ID =
-  (process.env.NEXT_PUBLIC_INITIA_ROLLUP_CHAIN_ID as string | undefined) || "artic-1"
+// 0G Mainnet (chain 16661).
+export const CHAIN_ID = "0g-mainnet"
+export const RPC_URL =
+  (process.env.NEXT_PUBLIC_ZERO_G_RPC_URL as string | undefined) ||
+  "https://evmrpc.0g.ai"
+export const EVM_CHAIN_ID = Number(
+  (process.env.NEXT_PUBLIC_ZERO_G_CHAIN_ID as string | undefined) || "16661",
+)
+export const AUTH_CHAIN_NAME = "0g-mainnet"
 
 const EXPLORER_BASE =
-  (process.env.NEXT_PUBLIC_INITIA_EXPLORER_BASE as string | undefined) ||
-  "https://scan.testnet.initia.xyz"
+  (process.env.NEXT_PUBLIC_ZERO_G_EXPLORER_BASE as string | undefined) ||
+  "https://chainscan.0g.ai"
 
-/** Build an explorer URL for a tx hash on the rollup. */
 export function explorerTxUrl(txHash: string | null | undefined): string | null {
   if (!txHash) return null
   const h = txHash.startsWith("0x") ? txHash : `0x${txHash}`
-  return `${EXPLORER_BASE.replace(/\/+$/, "")}/${ROLLUP_CHAIN_ID}/tx/${h}`
+  return `${EXPLORER_BASE.replace(/\/+$/, "")}/tx/${h}`
 }
 
-/** Short hash like 0x1a2b…f8e9 for inline display. */
+export function explorerAddressUrl(address: string | null | undefined): string | null {
+  if (!address) return null
+  return `${EXPLORER_BASE.replace(/\/+$/, "")}/address/${address}`
+}
+
+/** Deployed 0G mainnet contract addresses. */
+export const CONTRACTS = {
+  decisionLogger:
+    (process.env.NEXT_PUBLIC_DECISION_LOGGER_ADDRESS as string | undefined) ||
+    "0x70a15Db526104abC2f021b7c690cd89a07EDE49C",
+  tradeLogger:
+    (process.env.NEXT_PUBLIC_TRADE_LOGGER_ADDRESS as string | undefined) ||
+    "0xeeb56334152D6bDB62aacF56f8DbCceA5210b78D",
+  strategyINFT:
+    (process.env.NEXT_PUBLIC_STRATEGY_INFT_ADDRESS as string | undefined) ||
+    "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D",
+} as const
+
 export function shortHash(txHash: string | null | undefined): string {
   if (!txHash) return ""
   const h = txHash.startsWith("0x") ? txHash : `0x${txHash}`

@@ -28,7 +28,10 @@ from .internal.router import router as internal_router
 from .market.price_feed import price_feed_loop
 from .market.router import router as market_router
 from .market.scheduler import register as register_market_jobs
+from .marketplace.router import router as marketplace_router
+from .marketplace.strategy_stats import router as strategy_stats_router
 from .proxy.forwarder import Forwarder
+from .strategies.router import router as strategies_router
 from .proxy.middleware import WakeProxyMiddleware
 from .proxy.ws import router as proxy_ws_router
 from .secrets import push as secrets_push
@@ -118,6 +121,9 @@ app.include_router(internal_router)
 app.include_router(images_router)
 app.include_router(market_router)
 app.include_router(secrets_router)
+app.include_router(strategy_stats_router)
+app.include_router(strategies_router)
+app.include_router(marketplace_router)
 app.include_router(ws_router)
 app.include_router(proxy_ws_router)
 

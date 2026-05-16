@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,3 +68,30 @@ async def get_trades(
             for r in rows
         ]
     )
+
+
+class ReasoningResponse(BaseModel):
+    trade_id: uuid.UUID
+    reasoning_cid: str | None
+    reasoning: dict | None
+
+
+@router.get("/{trade_id}/reasoning", response_model=ReasoningResponse)
+async def get_trade_reasoning(
+    trade_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+) -> ReasoningResponse:
+    """Fetch full LLM reasoning JSON from 0G Storage by cid."""
+    trade = await db.get(Trade, trade_id)
+    if trade is None:
+        raise HTTPException(status_code=404, detail=f"trade {trade_id} not found")
+    cid = trade.reasoning_cid
+    if not cid:
+        return ReasoningResponse(trade_id=trade_id, reasoning_cid=None, reasoning=None)
+    # Lazy import to avoid hard dep at module load
+    try:
+        from app.storage.og_storage import get_client  # type: ignore
+        data = get_client().download_json(cid)
+    except Exception:
+        data = None
+    return ReasoningResponse(trade_id=trade_id, reasoning_cid=cid, reasoning=data)

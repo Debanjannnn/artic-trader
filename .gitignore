@@ -79,3 +79,15 @@ __MACOSX/
 .vercel
 
 hub/docker/images/*.tar.gz
+
+.playwright-mcp/
+.agents/
+*.egg-info/
+
+# === Private / internal-only (not for public clone) ===
+tasks/
+tests/
+docs/
+clients/tui/
+clients/cli/
+clients/telegram/

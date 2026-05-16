@@ -7,14 +7,15 @@ import { ClientsSection } from "@/components/newlanding/clients-section";
 import { CtaBanner } from "@/components/newlanding/cta-banner";
 import { Footer } from "@/components/newlanding/footer";
 import { FadeIn } from "@/components/shared/fade-in";
+import { SmoothSnapContainer } from "@/components/shared/smooth-snap-container";
 
 export default function Home() {
   return (
     <>
       <Navbar />
-      <main>
+      <SmoothSnapContainer>
         <Hero />
-        <Ticker />
+        {/* <Ticker /> */}
         {/* <FeatureTransition /> */}
         <FadeIn>
           <FeaturesGrid />
@@ -28,8 +29,8 @@ export default function Home() {
         <FadeIn>
           <CtaBanner />
         </FadeIn>
-      </main>
-      <Footer />
+        <Footer />
+      </SmoothSnapContainer>
     </>
   );
 }

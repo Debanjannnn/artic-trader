@@ -3,7 +3,7 @@ import { ConnectWalletClient } from "./connect-client"
 
 export const metadata: Metadata = {
   title: "Connect Wallet — Artic",
-  description: "Connect your Initia wallet to use Artic.",
+  description: "Connect your EVM wallet on 0G mainnet to use Artic.",
 }
 
 export default function ConnectPage() {
@@ -13,8 +13,7 @@ export default function ConnectPage() {
         <div className="mb-10 text-center">
           <h1 className="font-heading text-4xl font-semibold text-foreground">Connect your wallet</h1>
           <p className="mt-3 text-sm text-foreground/60">
-            Sign in with your Initia wallet to access your trading agents. Authorize an auto-signing
-            session once; dashboard actions won&apos;t prompt you again until it expires.
+            Sign in with an EVM wallet on 0G mainnet.
           </p>
         </div>
 
@@ -23,7 +22,7 @@ export default function ConnectPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-foreground/40">
-          Powered by InterwovenKit · Initia testnet
+          EIP-4361 SIWE · 0G Chain ID 16661
         </p>
       </div>
     </main>

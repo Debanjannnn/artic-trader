@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     INTERNAL_SECRET: str = ""
 
     # Agent spawner
+    MAX_AGENTS: int = 4
     AGENT_IMAGE: str = "artic-app:dev"
     AGENT_NETWORK: str = "artic-dev"
     DOCKER_HOST: str = ""  # empty -> docker SDK uses /var/run/docker.sock

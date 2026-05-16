@@ -1,8 +1,17 @@
-"""Deploy TradeLogger to the configured Initia rollup (or any EVM RPC)."""
+"""Deploy TradeLogger to 0G Mainnet (chain 16661, https://evmrpc.0g.ai)."""
 import os
 import json
+from pathlib import Path
 from web3 import Web3
 from solcx import compile_source, install_solc
+
+try:
+    from dotenv import load_dotenv
+    _ENV_PATH = Path(__file__).resolve().parent.parent / ".env.local"
+    if _ENV_PATH.exists():
+        load_dotenv(_ENV_PATH, override=False)
+except ImportError:
+    pass
 
 
 def _resolve(env_names):
@@ -29,14 +38,14 @@ def deploy():
     abi = contract_interface["abi"]
     bytecode = contract_interface["bin"]
 
-    rpc = _resolve(["INITIA_RPC_URL", "CHAIN_RPC_URL", "HSK_RPC_URL"])
-    pk = _resolve(["INITIA_PRIVATE_KEY", "CHAIN_PRIVATE_KEY", "HSK_PRIVATE_KEY"])
-    chain_id_env = _resolve(["INITIA_CHAIN_ID", "CHAIN_ID"])
+    rpc = _resolve(["ZERO_G_RPC_URL"])
+    pk = _resolve(["ZERO_G_PRIVATE_KEY"])
+    chain_id_env = _resolve(["ZERO_G_CHAIN_ID"]) or "16661"
 
     if not rpc:
-        raise ValueError("INITIA_RPC_URL not set")
+        raise ValueError("ZERO_G_RPC_URL not set")
     if not pk:
-        raise ValueError("INITIA_PRIVATE_KEY not set")
+        raise ValueError("ZERO_G_PRIVATE_KEY not set")
 
     w3 = Web3(Web3.HTTPProvider(rpc))
     if not w3.is_connected():

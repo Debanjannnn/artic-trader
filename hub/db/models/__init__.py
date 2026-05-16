@@ -15,6 +15,7 @@ from .market_cache import MarketCache
 from .onchain import OnchainDecision, OnchainTrade
 from .refresh_token import RefreshToken
 from .secret import AgentSecretOverride, UserSecret
+from .strategy import MarketplaceReport, MarketplaceStrategy, UserStrategy
 from .trade import Trade
 from .user import User
 from .user_vm import UserVM
@@ -35,4 +36,7 @@ __all__ = [
     "UserVM",
     "AuditLog",
     "RefreshToken",
+    "UserStrategy",
+    "MarketplaceStrategy",
+    "MarketplaceReport",
 ]

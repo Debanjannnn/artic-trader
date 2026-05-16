@@ -1,9 +1,7 @@
 /**
- * Hub auth handshake over ADR-36 (Cosmos arbitrary-message signing).
+ * Hub auth handshake — EIP-4361 SIWE on 0G mainnet.
  *
- * Used by both the InterwovenKit connect flow (persistent wallet) and the
- * dev harness at /auth/test/v1 (ephemeral wallet). Helpers here are
- * signer-agnostic — callers supply their own sign function.
+ * Helpers here are signer-agnostic — callers supply their own signature.
  */
 
 import { secp256k1 } from "@noble/curves/secp256k1.js"
@@ -30,24 +28,6 @@ export function buildSigninMessage(args: BuildMessageArgs): string {
     `Issued At: ${args.issued_at_iso}\n` +
     `Expires At: ${args.session_expires_at_iso}`
   )
-}
-
-/** ADR-36 amino SignDoc (keys sorted alphabetically — must match hub rebuild). */
-export function buildAdr36SignDoc(address: string, message: string) {
-  const msgB64 = b64encode(new TextEncoder().encode(message))
-  return {
-    account_number: "0",
-    chain_id: "",
-    fee: { amount: [], gas: "0" },
-    memo: "",
-    msgs: [
-      {
-        type: "sign/MsgSignData",
-        value: { data: msgB64, signer: address },
-      },
-    ],
-    sequence: "0",
-  }
 }
 
 export function newSessionKeypair() {
@@ -174,7 +154,6 @@ export function clearJwt() {
   }
 }
 
-/** Decode JWT exp claim to unix-ms (best-effort; returns 0 on failure). */
 export function jwtExpMs(token: string): number {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]))

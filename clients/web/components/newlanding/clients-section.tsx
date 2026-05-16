@@ -37,10 +37,10 @@ export function ClientsSection() {
       <p className="text-xs tracking-[1.5px] uppercase text-gray mb-4">
         Access your agents everywhere
       </p>
-      <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight text-white mb-4">
+      <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight text-foreground mb-4">
         Your interface. Your choice.
       </h2>
-      <p className="text-[17px] text-white/50 max-w-[520px] leading-relaxed">
+      <p className="text-[17px] text-foreground/50 max-w-[520px] leading-relaxed">
         Artic meets you where you are — terminal, browser, or Telegram.
       </p>
 

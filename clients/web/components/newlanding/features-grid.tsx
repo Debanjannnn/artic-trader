@@ -78,7 +78,7 @@ function IconPanel({ idx }: { idx: number }) {
   return (
     <motion.div
       key={idx}
-      className="w-full aspect-square rounded-3xl overflow-hidden relative border border-white/10"
+      className="w-full aspect-square rounded-3xl overflow-hidden relative border border-foreground/10"
       style={{ background: f.accent[0] }}
       initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
       animate={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -114,7 +114,7 @@ function IconPanel({ idx }: { idx: number }) {
       />
       {/* Centered icon */}
       <motion.div
-        className="absolute inset-0 flex items-center justify-center text-white/95 drop-shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+        className="absolute inset-0 flex items-center justify-center text-foreground/95 drop-shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ ...springBouncy, delay: 0.12 }}
@@ -132,7 +132,7 @@ export function FeaturesGrid() {
   return (
     <section
       id="features"
-      className="py-24 px-6 md:px-12 max-w-7xl mx-auto h-screen"
+      className="py-36 px-6 md:px-12 max-w-7xl mx-auto h-screen"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
         {/* Left: heading + feature list */}
@@ -152,7 +152,7 @@ export function FeaturesGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.6 }}
-              className="text-[clamp(40px,6vw,72px)] font-bold tracking-tighter text-white mt-10 mb-4 leading-[1]"
+              className="text-[clamp(40px,6vw,72px)] font-bold tracking-tighter text-foreground mt-10 mb-4 leading-[1]"
             >
               Features
             </motion.h2>
@@ -161,13 +161,13 @@ export function FeaturesGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.6 }}
-              className="text-xs tracking-[1.5px] uppercase text-white/70"
+              className="text-xs tracking-[1.5px] uppercase text-foreground/70"
             >
               Explore what we can offer you
             </motion.p>
           </div>
 
-          <div className="border-t border-white/10">
+          <div className="border-t border-foreground/10">
             {features.map((f, i) => {
               const isActive = i === active;
               return (
@@ -178,7 +178,7 @@ export function FeaturesGrid() {
                   onFocus={() => setActive(i)}
                   onClick={() => setActive(i)}
                   className={cn(
-                    "group relative w-full flex items-center justify-between py-5 px-4 border-b border-white/10 text-left transition-colors duration-200",
+                    "group relative w-full flex items-center justify-between py-5 px-4 border-b border-foreground/10 text-left transition-colors duration-200",
                     isActive ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
                   )}
                 >
@@ -193,7 +193,7 @@ export function FeaturesGrid() {
                   <span
                     className={cn(
                       "text-[17px] font-medium transition-colors",
-                      isActive ? "text-white" : "text-white/70 group-hover:text-white"
+                      isActive ? "text-foreground" : "text-foreground/70 group-hover:text-foreground"
                     )}
                   >
                     {f.title}
@@ -201,7 +201,7 @@ export function FeaturesGrid() {
                   <span
                     className={cn(
                       "transition-colors duration-300",
-                      isActive ? "text-gray" : "text-white/40 group-hover:text-white/70"
+                      isActive ? "text-gray" : "text-foreground/40 group-hover:text-foreground/70"
                     )}
                   >
                     <ArrowRight
@@ -228,13 +228,13 @@ export function FeaturesGrid() {
               transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
               className="mb-8"
             >
-              <p className="text-xs tracking-[1.5px] uppercase text-white/40 mb-3">
+              <p className="text-xs tracking-[1.5px] uppercase text-foreground/40 mb-3">
                 {`0${active + 1}`.slice(-2)} — {activeFeature.short}
               </p>
-              <h3 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-4 leading-tight">
+              <h3 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground mb-4 leading-tight">
                 {activeFeature.title}
               </h3>
-              <p className="text-[15px] text-white/55 leading-relaxed max-w-lg">
+              <p className="text-[15px] text-foreground/55 leading-relaxed max-w-lg">
                 {activeFeature.description}
               </p>
             </motion.div>

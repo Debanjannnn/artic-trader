@@ -10,6 +10,8 @@ contract DecisionLogger {
         uint8 confidence,
         int16 pnlBps,
         bytes32 reasoningHash,
+        address teeProvider,
+        bytes teeSignature,
         uint256 timestamp
     );
 
@@ -31,9 +33,22 @@ contract DecisionLogger {
         uint8 strategy,
         uint8 confidence,
         int16 pnlBps,
-        bytes32 reasoningHash
+        bytes32 reasoningHash,
+        address teeProvider,
+        bytes calldata teeSignature
     ) external onlyOwner {
-        emit DecisionLogged(sessionId, symbol, action, strategy, confidence, pnlBps, reasoningHash, block.timestamp);
+        emit DecisionLogged(
+            sessionId,
+            symbol,
+            action,
+            strategy,
+            confidence,
+            pnlBps,
+            reasoningHash,
+            teeProvider,
+            teeSignature,
+            block.timestamp
+        );
     }
 
     function transferOwnership(address newOwner) external onlyOwner {

@@ -1,9 +1,11 @@
 # Artic
 
-AI-powered multi-agent trading platform built on Initia. An LLM selects from 30+ quant
+AI-powered multi-agent trading platform built on 0G. An LLM selects from 30+ quant
 strategies and manages risk dynamically. A central hub orchestrates multiple isolated agent
-processes (one per symbol) running on Morph VMs. Every AI decision and trade is logged
-immutably to an Initia MiniEVM appchain.
+processes (one per symbol) running on Morph VMs. Every AI decision and trade — plus the
+TEE attestation signature from 0G Compute sealed inference — is logged immutably to the
+0G mainnet via DecisionLogger + TradeLogger contracts. Full LLM reasoning + trade detail
+JSON live on 0G Storage; on-chain events bind the storage pointer.
 
 **Architecture decisions & build plan**: `/.claude/plans/stateless-gliding-corbato.md`
 

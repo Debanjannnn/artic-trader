@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
-import { InterwovenProviders } from "@/components/providers/interwoven-providers";
+import { Web3Providers } from "@/components/providers/web3-providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -58,7 +58,7 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} dark antialiased`}
     >
       <body className="min-h-screen flex flex-col">
-        <InterwovenProviders>{children}</InterwovenProviders>
+        <Web3Providers>{children}</Web3Providers>
       </body>
     </html>
   );

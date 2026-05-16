@@ -1,150 +1,169 @@
+"use client";
+
 import Link from "next/link";
-import { GitBranch, Send, X, MessagesSquare } from "lucide-react";
-import { Logo } from "@/components/shared/logo";
+import { useState } from "react";
+import { GitBranch, X, MessageCircle } from "lucide-react";
 
 const INK = "#0E141A";
 
-const columns = [
-  {
-    title: "Product",
-    links: [
-      { label: "Features", href: "/#features" },
-      { label: "Quickstart", href: "/docs/quickstart" },
-      { label: "Strategy Catalog", href: "/docs/strategies" },
-      { label: "API Reference", href: "/docs/hub-api" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Documentation", href: "/docs" },
-      { label: "Litepaper", href: "/litepaper" },
-      { label: "Architecture", href: "/docs/architecture" },
-      { label: "Blog", href: "/blog" },
-      { label: "Jobs", href: "/jobs" },
-    ],
-  },
-  {
-    title: "Community",
-    links: [
-      { label: "Github", href: "https://github.com/Dragoon4002/Artic_trader" },
-      { label: "Telegram", href: "#" },
-      { label: "Twitter / X", href: "#" },
-      { label: "Discord", href: "#" },
-    ],
-  },
+const resources = [
+  { label: "Agent Framework", href: "/docs" },
+  { label: "Strategy Catalog", href: "/docs/strategies" },
+  { label: "Hub API", href: "/docs/hub-api" },
+  { label: "Smart Contracts", href: "/docs/architecture" },
 ];
 
 const socials = [
-  { icon: GitBranch, href: "https://github.com/Dragoon4002/Artic_trader", label: "GitHub" },
-  { icon: X, href: "#", label: "Twitter" },
-  { icon: Send, href: "#", label: "Telegram" },
-  { icon: MessagesSquare, href: "#", label: "Discord" },
+  { label: "Twitter / X", href: "#", Icon: X },
+  { label: "LinkedIn", href: "#", Icon: null },
+  { label: "Discord", href: "#", Icon: MessageCircle },
+  { label: "GitHub", href: "https://github.com/Dragoon4002/Artic_trader", Icon: GitBranch },
 ];
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+    setSent(true);
+  }
+
   return (
-    <footer
-      className="relative overflow-hidden bg-[#CCD2D6]"
-      style={{ color: INK }}
-    >
-      <div className="relative px-6 md:px-12 mb-8">
-        {/* Wordmark / tagline */}
-        <div className="max-w-7xl mx-auto mb-8 md:mb-24">
-          <h2
-            className="text-[clamp(40px,6vw,72px)] font-bold tracking-tighter leading-[1.05] bg-clip-text text-transparent"
-            style={{
-              backgroundImage: `linear-gradient(180deg, rgba(14,20,26,0.45) 0%, ${INK} 100%)`,
-            }}
+    <footer className="relative overflow-hidden" style={{ background: "#CCD2D6" }}>
+      {/* 3-col grid */}
+      <div
+        className="grid grid-cols-1 md:grid-cols-3"
+        style={{ borderColor: `${INK}20` }}
+      >
+        {/* col 1 — resources */}
+        <div
+          className="px-8 md:px-12 pt-10 pb-12 md:border-r"
+          style={{ borderColor: `${INK}20` }}
+        >
+          <p
+            className="text-[10px] tracking-[2.5px] uppercase font-mono mb-6"
+            style={{ color: `${INK}55` }}
           >
-            Let your Pack Trade for You.
-          </h2>
-          <p className="mt-4 text-[18px] leading-relaxed max-w-7xl" style={{ color: `${INK}99` }}>
-            Multi-agent AI traders, on-chain transparency, and 30+ quant
-            strategies — all coordinated by one hub.
+            Resources (coming soon)
           </p>
+          <ul className="space-y-3">
+            {resources.map(({ label, href }) => (
+              <li key={label}>
+                <Link
+                  href={href}
+                  className="text-[14px] transition-opacity hover:opacity-100"
+                  style={{ color: `${INK}99` }}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Link grid */}
+        {/* col 2 — socials */}
         <div
-          className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-10 pb-12 border-b"
-          style={{ borderColor: `${INK}1f` }}
+          className="px-8 md:px-12 pt-10 pb-12 md:border-r"
+          style={{ borderColor: `${INK}20` }}
         >
-          <div className="col-span-2 md:col-span-2">
-            <Logo size="small" />
-            <p className="text-[13px] mt-3 max-w-xs leading-relaxed" style={{ color: `${INK}99` }}>
-              AI-powered multi-agent trading platform built on Initia.
+          <p
+            className="text-[10px] tracking-[2.5px] uppercase font-mono mb-6"
+            style={{ color: `${INK}55` }}
+          >
+            Socials
+          </p>
+          <ul className="space-y-3">
+            {socials.map(({ label, href, Icon }) => (
+              <li key={label}>
+                <Link
+                  href={href}
+                  className="flex items-center gap-3 text-[14px] transition-opacity hover:opacity-100"
+                  style={{ color: `${INK}99` }}
+                >
+                  {Icon && <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: `${INK}55` }} />}
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* col 3 — waitlist */}
+        <div className="px-8 md:px-12 pt-10 pb-12 flex flex-col justify-between gap-8">
+          <div>
+            <p
+              className="text-[10px] tracking-[2.5px] uppercase font-mono mb-5"
+              style={{ color: `${INK}55` }}
+            >
+              Waitlist
+            </p>
+            <h2
+              className="font-serif text-[clamp(22px,2.4vw,32px)] font-light leading-[1.1] mb-2"
+              style={{ color: INK }}
+            >
+              Be first on<br />the rate curve.
+            </h2>
+            <p className="text-[12px] mb-5 leading-relaxed" style={{ color: `${INK}80` }}>
+              Early access to the platform, strategy updates, and launch news.
             </p>
 
-            {/* Status pill */}
-            <div
-              className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm"
-              style={{
-                background: `${INK}0d`,
-                border: `1px solid ${INK}1f`,
-              }}
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
-              </span>
-              <span className="text-xs" style={{ color: INK }}>All systems operational</span>
-            </div>
+            {sent ? (
+              <p className="text-[13px] font-mono" style={{ color: INK }}>↳ You&apos;re on the list.</p>
+            ) : (
+              <form
+                onSubmit={handleSubmit}
+                className="flex items-center border-b transition-colors"
+                style={{ borderColor: `${INK}30` }}
+              >
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@domain.com"
+                  className="flex-1 bg-transparent text-[13px] py-2.5 outline-none font-mono"
+                  style={{ color: INK }}
+                />
+                <button
+                  type="submit"
+                  aria-label="Join waitlist"
+                  className="pl-3 text-[16px] transition-opacity hover:opacity-100"
+                  style={{ color: `${INK}55` }}
+                >
+                  ↗
+                </button>
+              </form>
+            )}
           </div>
 
-          {columns.map((col) => (
-            <div key={col.title}>
-              <p
-                className="text-xs font-semibold uppercase tracking-wider mb-4"
-                style={{ color: INK }}
-              >
-                {col.title}
-              </p>
-              <ul className="space-y-2.5">
-                {col.links.map((l) => (
-                  <li key={l.label}>
-                    <Link
-                      href={l.href}
-                      className="text-[13px] transition-colors hover:opacity-100"
-                      style={{ color: `${INK}b3` }}
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom bar */}
-        <div className="max-w-7xl mx-auto pt-6 flex flex-wrap justify-between items-center gap-4">
-          <p className="text-xs" style={{ color: `${INK}80` }}>
-            © 2026 Silone Labs. All rights reserved.
-          </p>
-
-          <div className="flex items-center gap-2">
-            {socials.map(({ icon: Icon, href, label }) => (
-              <Link
-                key={label}
-                href={href}
-                aria-label={label}
-                className="w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-                style={{
-                  background: `${INK}0d`,
-                  border: `1px solid ${INK}1f`,
-                  color: `${INK}b3`,
-                }}
-              >
-                <Icon className="w-3.5 h-3.5" />
-              </Link>
-            ))}
-          </div>
-
-          <p className="text-xs" style={{ color: `${INK}80` }}>
-            Built on Initia · Powered by Morph VM
+          <p className="text-[11px] font-mono" style={{ color: `${INK}50` }}>
+            © 2026 Silone Labs
           </p>
         </div>
+      </div>
+
+      {/* dot divider */}
+      {/* <div
+        className="flex justify-center py-3 border-t"
+        style={{ borderColor: `${INK}15` }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#A0623A" }} />
+      </div> */}
+
+      {/* giant wordmark */}
+      <div className="overflow-hidden leading-none select-none pointer-events-none" aria-hidden>
+        <p
+          className="font-serif font-bold tracking-tighter text-center whitespace-nowrap"
+          style={{
+            fontSize: "clamp(80px, 18vw, 260px)",
+            lineHeight: 0.82,
+            marginBottom: "-0.12em",
+            color: `${INK}18`,
+          }}
+        >
+          ARTIC
+        </p>
       </div>
     </footer>
   );

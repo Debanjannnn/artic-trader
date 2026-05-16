@@ -25,9 +25,12 @@ class Trade(Base):
     leverage: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pnl: Mapped[float | None] = mapped_column(Numeric, nullable=True)
     strategy: Mapped[str | None] = mapped_column(String, nullable=True)
+    strategy_hash: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     close_reason: Mapped[str | None] = mapped_column(String, nullable=True)
     tx_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     onchain_tx_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    # 0G Storage root hash pointing at the off-chain LLM reasoning blob.
+    reasoning_cid: Mapped[str | None] = mapped_column(String, nullable=True)
     opened_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

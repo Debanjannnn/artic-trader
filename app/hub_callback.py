@@ -78,6 +78,12 @@ class HubCallback:
                 open_at = entry[1] if entry else datetime.now(timezone.utc)
             self._last_trade_id[agent_id] = trade_id
 
+            # Pull latest 0G Storage reasoning pointer if available
+            try:
+                from app.llm.llm_planner import LAST_REASONING_CID
+            except Exception:
+                LAST_REASONING_CID = None
+
             payload = {
                 "id": str(trade_id),
                 "agent_id": agent_id,
@@ -88,10 +94,12 @@ class HubCallback:
                 "leverage": trade.get("leverage", 1),
                 "pnl_usdt": str(trade["pnl"]) if trade.get("pnl") is not None else None,
                 "strategy": trade.get("strategy") or "unknown",
+                "strategy_hash": trade.get("strategy_hash"),
                 "open_at": open_at.isoformat(),
                 "close_at": datetime.now(timezone.utc).isoformat() if has_exit else None,
                 "close_reason": trade.get("close_reason"),
                 "tx_hash": trade.get("tx_hash"),
+                "reasoning_cid": trade.get("reasoning_cid") or LAST_REASONING_CID,
             }
             client = await self._get_client()
             await client.post("/trades", json=payload)

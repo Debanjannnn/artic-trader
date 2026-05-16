@@ -125,9 +125,9 @@
       "type": "function"
     }
   ],
-  "tx_hash": "d2b8e935c5fb5df88a46e032c92ad8ab00b3f6c26cb845700ddce7969d78cfe6",
-  "block_number": 97,
-  "chain_id": "artic-1",
-  "evm_chain_id": 169304138652922,
-  "rpc_url": "http://localhost:8545"
+  "tx_hash": "dddabb7cede281eb266522a5b7d5b8d32013c845aca8b26052d2325668613157",
+  "block_number": 33431627,
+  "chain_id": "16661",
+  "evm_chain_id": 16661,
+  "rpc_url": "https://evmrpc.0g.ai"
 }

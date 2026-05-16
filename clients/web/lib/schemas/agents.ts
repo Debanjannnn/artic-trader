@@ -86,6 +86,7 @@ export const TradeSchema = z.object({
   opened_at: Iso8601Schema,
   closed_at: Iso8601Schema.nullable(),
   tx_hash: z.string().nullable().optional(),
+  reasoning_cid: z.string().nullable().optional(),
 })
 export type Trade = z.infer<typeof TradeSchema>
 

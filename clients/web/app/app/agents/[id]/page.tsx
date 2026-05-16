@@ -338,13 +338,24 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
                         target="_blank"
                         rel="noreferrer"
                         className="text-[var(--color-blue-light)] hover:underline"
-                        title={t.tx_hash}
+                        title={`${t.tx_hash} (0G Galileo)`}
                       >
                         {shortHash(t.tx_hash)} ↗
                       </a>
                     ) : (
                       <span className="text-foreground/30">—</span>
                     )}
+                    {t.reasoning_cid ? (
+                      <a
+                        href={`/api/v1/u/hub/trades/${t.id}/reasoning`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-2 text-[10px] text-[var(--color-orange-text)] hover:underline"
+                        title={`0G Storage cid: ${t.reasoning_cid}`}
+                      >
+                        reasoning ↗
+                      </a>
+                    ) : null}
                   </td>
                 </tr>
               ))}

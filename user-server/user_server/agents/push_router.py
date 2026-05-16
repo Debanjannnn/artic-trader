@@ -42,10 +42,12 @@ class TradePush(BaseModel):
     leverage: int
     pnl_usdt: Decimal | None = None
     strategy: str
+    strategy_hash: str | None = None
     open_at: datetime
     close_at: datetime | None = None
     close_reason: str | None = None
     tx_hash: str | None = None
+    reasoning_cid: str | None = None  # 0G Storage root hash for full LLM reasoning
 
 
 class LogsPush(BaseModel):
@@ -97,10 +99,12 @@ async def push_trade(body: TradePush, db: AsyncSession = Depends(get_session)) -
                 leverage=body.leverage,
                 pnl_usdt=body.pnl_usdt,
                 strategy=body.strategy,
+                strategy_hash=body.strategy_hash,
                 open_at=body.open_at,
                 close_at=body.close_at,
                 close_reason=body.close_reason,
                 tx_hash=body.tx_hash,
+                reasoning_cid=body.reasoning_cid,
             )
         )
     else:
@@ -110,6 +114,8 @@ async def push_trade(body: TradePush, db: AsyncSession = Depends(get_session)) -
         exists.close_reason = body.close_reason
         if body.tx_hash and not exists.tx_hash:
             exists.tx_hash = body.tx_hash
+        if body.reasoning_cid and not exists.reasoning_cid:
+            exists.reasoning_cid = body.reasoning_cid
     await db.commit()
     return {"id": str(body.id)}
 

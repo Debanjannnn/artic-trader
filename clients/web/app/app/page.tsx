@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 export default function AppIndex() {
   const router = useRouter()
   useEffect(() => {
-    router.replace("/app/agents")
+    router.replace("/app/overview")
   }, [router])
   return null
 }
