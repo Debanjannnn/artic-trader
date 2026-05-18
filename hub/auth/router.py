@@ -185,9 +185,12 @@ async def verify_signature(
         )
         db.add(user)
         await db.flush()
-        from ..vm import get_service as _get_vm_service
+    # Always ensure a user_vms row exists — covers the case where the row was
+    # manually deleted (debug) while the User row remained. provision_for_user
+    # is idempotent: returns the existing row if present.
+    from ..vm import get_service as _get_vm_service
 
-        await _get_vm_service().provision_for_user(db, user.id)
+    await _get_vm_service().provision_for_user(db, user.id)
 
     sess = AuthSessionKey(
         user_id=user.id,
